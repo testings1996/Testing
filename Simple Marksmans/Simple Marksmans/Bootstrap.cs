@@ -1,16 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using EloBuddy;
-using EloBuddy.SDK;
-using EloBuddy.SDK.Menu;
-using EloBuddy.SDK.Utils;
-using Simple_Marksmans.Interfaces;
+﻿using EloBuddy;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans
 {
@@ -18,15 +7,14 @@ namespace Simple_Marksmans
     {
         public static void Initialize()
         {
-            var initialized = InitializeAddon.Initialize();
+            var pluginInitialized = InitializeAddon.Initialize();
 
-            if (initialized)
-            {
-                var menu = MainMenu.AddMenu("Marksman AIO", "MarksmanAIO");
-                menu.AddSubMenu("Modes");
+            if (!pluginInitialized)
+                return;
 
-                Chat.Print(Player.Instance.ChampionName + " loaded succesfully.");
-            }
+            MenuManager.CreateMenu();
+
+            Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName + "</font></b> loaded successfully.");
         }
     }
 }

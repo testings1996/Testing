@@ -2,6 +2,7 @@
 using EloBuddy;
 using EloBuddy.SDK;
 using Simple_Marksmans.Interfaces;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans
 {
@@ -14,8 +15,8 @@ namespace Simple_Marksmans
             LoadPlugin();
 
             if (_pluginInstance == null)
-            { 
-                Chat.Print(Player.Instance.ChampionName + " is not yet supported.");
+            {
+                Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName + "</font></b> is not yet supported.");
                 return false;
             }
 
@@ -36,7 +37,7 @@ namespace Simple_Marksmans
 
                 //_plugin = (IHeroAddon) constructorInfo?.Invoke(new object[] {});
 
-                _pluginInstance = (IHeroAddon)Activator.CreateInstance(type);
+                _pluginInstance = (IHeroAddon)System.Activator.CreateInstance(type);
             }
         }
 
