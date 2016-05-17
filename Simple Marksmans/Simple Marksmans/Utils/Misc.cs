@@ -33,6 +33,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EloBuddy;
+using Simple_Marksmans.Interfaces;
 
 namespace Simple_Marksmans.Utils
 {
@@ -89,5 +90,14 @@ namespace Simple_Marksmans.Utils
             Chat.Print("<font size=\"21\"><font color=\"#0075B0\"><b>[Marksman AIO]</b></font> " + message + "</font>");
         }
 
+
+
+        public static void UseItem(this IItem item)
+        {
+            if (EloBuddy.SDK.Item.HasItem(item.ItemId))
+            {
+                EloBuddy.SDK.Item.UseItem(item.ItemId);
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 ﻿#region Licensing
 //  --------------------------------------------------------------------------------------------------------------------
-//  <copyright file="IActivatorItem.cs" company="EloBuddy">
+//  <copyright file="IItem.cs" company="EloBuddy">
 // 
 //  Marksman AIO
 // 
@@ -31,18 +31,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Interfaces
 {
-    public interface IActivatorItem
+    public interface IItem
     {
-        void PermaActive();
-        void ComboMode();
-        void HarassMode();
-        void Flee();
-        void LaneClear();
-        void JungleClear();
-        void LastHit();
-        void OnDraw();
+        string ItemName { get; set; }
+        int ItemId { get; set; }
+        float Range { get; set; }
+        ItemType ItemType { get; set; }
+        ItemTargettingType ItemTargettingType { get; set; }
+        ItemUsageWhen ItemUsageWhen { get; set; }
     }
 }

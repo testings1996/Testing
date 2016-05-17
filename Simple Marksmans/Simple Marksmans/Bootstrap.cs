@@ -41,6 +41,7 @@ namespace Simple_Marksmans
                 return;
 
             MenuManager.CreateMenu();
+            Activator.Activator.InitializeActivator();
 
             Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName + "</font></b> loaded successfully.");
         }
