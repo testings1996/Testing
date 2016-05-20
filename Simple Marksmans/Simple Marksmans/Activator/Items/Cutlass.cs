@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class Cutlass : Activator
+    internal class Cutlass : Item
     {
         public Cutlass()
         {

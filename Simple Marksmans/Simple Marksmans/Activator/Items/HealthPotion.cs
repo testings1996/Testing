@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class HealthPotion : Activator
+    internal class HealthPotion : Item
     {
         public HealthPotion()
         {

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Simple_Marksmans.Interfaces;
+﻿using Simple_Marksmans.Interfaces;
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Activator

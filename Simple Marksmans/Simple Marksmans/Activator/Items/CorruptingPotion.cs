@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class CorruptingPotion : Activator
+    internal class CorruptingPotion : Item
     {
         public CorruptingPotion()
         {

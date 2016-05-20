@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class Scimitar : Activator
+    internal class Scimitar : Item
     {
         public Scimitar()
         {

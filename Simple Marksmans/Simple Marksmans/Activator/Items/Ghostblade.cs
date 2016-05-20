@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class Ghostblade : Activator
+    internal class Ghostblade : Item
     {
         public Ghostblade()
         {

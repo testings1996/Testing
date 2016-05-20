@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class RefillablePotion : Activator
+    internal class RefillablePotion : Item
     {
         public RefillablePotion()
         {

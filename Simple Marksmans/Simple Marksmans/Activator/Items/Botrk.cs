@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class Botrk : Activator
+    internal class Botrk : Item
     {
         public Botrk()
         {

@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class Gunblade : Activator
+    internal class Gunblade : Item
     {
         public Gunblade()
         {

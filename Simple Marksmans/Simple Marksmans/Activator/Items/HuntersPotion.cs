@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class HuntersPotion : Activator
+    internal class HuntersPotion : Item
     {
         public HuntersPotion()
         {

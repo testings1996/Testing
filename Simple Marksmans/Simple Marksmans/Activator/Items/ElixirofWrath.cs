@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class ElixirofWrath : Activator
+    internal class ElixirofWrath : Item
     {
         public ElixirofWrath()
         {

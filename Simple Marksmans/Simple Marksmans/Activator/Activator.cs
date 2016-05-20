@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
-using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using Simple_Marksmans.Activator.Items;
@@ -13,43 +11,158 @@ using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Activator
 {
-    internal class Activator : Item
+    internal class Activator 
     {
         private static int _lastScanTick;
         private static Menu _menu;
-        public static Menu ActivatorMenu;
 
-        private new static readonly Dictionary<string, int> ItemId = new Dictionary<string, int>
+        public static Menu ActivatorMenu { get; set; }
+
+        public static IItem HealthPotion { get; private set; }
+        public static IItem RefillablePotion { get; private set; }
+        public static IItem HuntersPotion { get; private set; }
+        public static IItem CorruptingPotion { get; private set; }
+        public static IItem ElixirofIron { get; private set; }
+        public static IItem ElixirofSorcery { get; private set; }
+        public static IItem ElixirofWrath { get; private set; }
+        public static IItem Scimitar { get; private set; }
+        public static IItem Quicksilver { get; private set; }
+        public static IItem Ghostblade { get; private set; }
+        public static IItem Cutlass { get; private set; }
+        public static IItem Gunblade { get; private set; }
+        public static IItem Botrk { get; private set; }
+
+        private static readonly List<int> ItemsId = new List<int>
         {
-            {"HealthPotion", 2003},
-            {"RefillablePotion", 2031},
-            {"HuntersPotion", 2032},
-            {"CorruptingPotion", 2033},
-            {"ElixirofIron", 2138},
-            {"ElixirofSorcery", 2139},
-            {"ElixirofWrath", 2140},
-            {"Scimitar", 3139},
-            {"Quicksilver", 3140},
-            {"Ghostblade", 3142},
-            {"Cutlass", 3144},
-            {"Gunblade", 3146},
-            {"Botrk", 3153}
+            2003,
+            2031,
+            2032,
+            2033,
+            2138,
+            2139,
+            2140,
+            3139,
+            3140,
+            3142,
+            3144,
+            3146,
+            3153
         };
 
-        public static IItem HealthPotion,
-            RefillablePotion,
-            HuntersPotion,
-            CorruptingPotion,
-            ElixirofIron,
-            ElixirofSorcery,
-            ElixirofWrath,
-            Scimitar,
-            Quicksilver,
-            Ghostblade,
-            Cutlass,
-            Gunblade,
-            Botrk;
+        private static readonly Dictionary<Func<int, bool>, Action> ObjectInitializer = new Dictionary
+            <Func<int, bool>, Action>
+        {
+            {
+                itemId => itemId == 2003, delegate
+                {
+                    if (HealthPotion == null)
+                        HealthPotion = new HealthPotion();
+                }
+            },
+            {
+                itemId => itemId == 2031, delegate
+                {
+                    if (RefillablePotion == null)
+                        RefillablePotion = new RefillablePotion();
+                }
+            },
+            {
+                itemId => itemId == 2032, delegate
+                {
+                    if (HuntersPotion == null)
+                        HuntersPotion = new HuntersPotion();
+                }
+            },
+            {
+                itemId => itemId == 2033, delegate
+                {
+                    if (CorruptingPotion == null)
+                        CorruptingPotion = new CorruptingPotion();
+                }
+            },
+            {
+                itemId => itemId == 2138, delegate
+                {
+                    if (ElixirofIron == null)
+                        ElixirofIron = new ElixirofIron();
+                }
+            },
+            {
+                itemId => itemId == 2139, delegate
+                {
+                    if (ElixirofSorcery == null)
+                        ElixirofSorcery = new ElixirofSorcery();
+                }
+            },
+            {
+                itemId => itemId == 2140, delegate
+                {
+                    if (ElixirofWrath == null)
+                        ElixirofWrath = new ElixirofWrath();
+                }
+            },
+            {
+                itemId => itemId == 3139, delegate
+                {
+                    if (Scimitar == null)
+                        Scimitar = new Scimitar();
+                }
+            },
+            {
+                itemId => itemId == 3140, delegate
+                {
+                    if (Quicksilver == null)
+                        Quicksilver = new Quicksilver();
+                }
+            },
+            {
+                itemId => itemId == 3142, delegate
+                {
+                    if (Ghostblade == null)
+                        Ghostblade = new Ghostblade();
+                }
+            },
+            {
+                itemId => itemId == 3144, delegate
+                {
+                    if (Cutlass == null)
+                        Cutlass = new Cutlass();
+                }
+            },
+            {
+                itemId => itemId == 3146, delegate
+                {
+                    if (Gunblade == null)
+                        Gunblade = new Gunblade();
+                }
+            },
+            {
+                itemId => itemId == 3153, delegate
+                {
+                    if (Botrk == null)
+                        Botrk = new Botrk();
+                }
+            }
+        };
 
+        private static readonly Dictionary<Func<int, bool>, Action> ObjectDestroyer = new Dictionary
+            <Func<int, bool>, Action>
+        {
+            {itemId => itemId == 2003, () => HealthPotion = null},
+            {itemId => itemId == 2031, () => RefillablePotion = null},
+            {itemId => itemId == 2032, () => HuntersPotion = null},
+            {itemId => itemId == 2033, () => CorruptingPotion = null},
+            {itemId => itemId == 2138, () => ElixirofIron = null},
+            {itemId => itemId == 2139, () => ElixirofSorcery = null},
+            {itemId => itemId == 2140, () => ElixirofWrath = null},
+            {itemId => itemId == 3139, () => Scimitar = null},
+            {itemId => itemId == 3140, () => Quicksilver = null},
+            {itemId => itemId == 3142, () => Ghostblade = null},
+            {itemId => itemId == 3144, () => Cutlass = null},
+            {itemId => itemId == 3146, () => Gunblade = null},
+            {itemId => itemId == 3153, () => Botrk = null}
+        };
+        
         public static void InitializeActivator()
         {
             _menu = MenuManager.Menu;
@@ -68,10 +181,6 @@ namespace Simple_Marksmans.Activator
             {
                 ScanForItems();
             }
-            if ((Orbwalker.ActiveModesFlags & Orbwalker.ActiveModes.LaneClear) != 0)
-            {
-                HealthPotion.UseItem();
-            }
         }
 
         private static void Shop_OnBuyItem(AIHeroClient sender, ShopActionEventArgs args)
@@ -82,102 +191,24 @@ namespace Simple_Marksmans.Activator
 
         private static void Shop_OnSellItem(AIHeroClient sender, ShopActionEventArgs args)
         {
-            var item = ItemId.FirstOrDefault(id => id.Value == args.Id);
-            if (item.Key == null)
-                return;
-
-            switch (item.Value)
-            {
-                case 2003:
-                    HealthPotion = null;
-                    break;
-                case 2031:
-                    RefillablePotion = null;
-                    break;
-                case 2032:
-                    CorruptingPotion = null;
-                    break;
-                case 2138:
-                    ElixirofIron = null;
-                    break;
-                case 2139:
-                    ElixirofSorcery = null;
-                    break;
-                case 2140:
-                    ElixirofWrath = null;
-                    break;
-                case 3139:
-                    Scimitar = null;
-                    break;
-                case 3140:
-                    Quicksilver = null;
-                    break;
-                case 3142:
-                    Ghostblade = null;
-                    break;
-                case 3144:
-                    Cutlass = null;
-                    break;
-                case 3146:
-                    Gunblade = null;
-                    break;
-                case 3153:
-                    Botrk = null;
-                    break;
-            }
+            UnLoadItem(args.Id);
         }
 
         private static void ScanForItems()
         {
             _lastScanTick = (int) Game.Time*1000;
 
-            foreach (var item in ItemId)
+            foreach (var item in ItemsId)
             {
-                if (EloBuddy.SDK.Item.HasItem(item.Value))
+                var myItem = new EloBuddy.SDK.Item(item);
+
+                if (myItem.IsOwned())
                 {
-                    LoadItem(item.Value);
+                    LoadItem(item);
                 }
                 else
                 {
-                    switch (item.Value)
-                    {
-                        case 2003:
-                            HealthPotion = null;
-                            break;
-                        case 2031:
-                            RefillablePotion = null;
-                            break;
-                        case 2032:
-                            CorruptingPotion = null;
-                            break;
-                        case 2138:
-                            ElixirofIron = null;
-                            break;
-                        case 2139:
-                            ElixirofSorcery = null;
-                            break;
-                        case 2140:
-                            ElixirofWrath = null;
-                            break;
-                        case 3139:
-                            Scimitar = null;
-                            break;
-                        case 3140:
-                            Quicksilver = null;
-                            break;
-                        case 3142:
-                            Ghostblade = null;
-                            break;
-                        case 3144:
-                            Cutlass = null;
-                            break;
-                        case 3146:
-                            Gunblade = null;
-                            break;
-                        case 3153:
-                            Botrk = null;
-                            break;
-                    }
+                    UnLoadItem(item);
                 }
             }
         }
@@ -200,83 +231,18 @@ namespace Simple_Marksmans.Activator
             ActivatorMenu.Add("Activator.ElixirofWrath", new CheckBox("Use Elixir of Wrath"));
         }
 
-        private static void LoadItem(int id)
+        public static void LoadItem(int id)
         {
-            switch (id)
-            {
-                case 2003:
-                    if (HealthPotion == null)
-                    {
-                        HealthPotion = new HealthPotion();
-                    }
-                    break;
-                case 2031:
-                    if (RefillablePotion == null)
-                    {
-                        RefillablePotion = new RefillablePotion();
-                    }
-                    break;
-                case 2032:
-                    if (CorruptingPotion == null)
-                    {
-                        CorruptingPotion = new CorruptingPotion();
-                    }
-                    break;
-                case 2138:
-                    if (ElixirofIron == null)
-                    {
-                        ElixirofIron = new ElixirofIron();
-                    }
-                    break;
-                case 2139:
-                    if (ElixirofSorcery == null)
-                    {
-                        ElixirofSorcery = new ElixirofSorcery();
-                    }
-                    break;
-                case 2140:
-                    if (ElixirofWrath == null)
-                    {
-                        ElixirofWrath = new ElixirofWrath();
-                    }
-                    break;
-                case 3139:
-                    if (Scimitar == null)
-                    {
-                        Scimitar = new Scimitar();
-                    }
-                    break;
-                case 3140:
-                    if (Quicksilver == null)
-                    {
-                        Quicksilver = new Quicksilver();
-                    }
-                    break;
-                case 3142:
-                    if (Ghostblade == null)
-                    {
-                        Ghostblade = new Ghostblade();
-                    }
-                    break;
-                case 3144:
-                    if (Cutlass == null)
-                    {
-                        Cutlass = new Cutlass();
-                    }
-                    break;
-                case 3146:
-                    if (Gunblade == null)
-                    {
-                        Gunblade = new Gunblade();
-                    }
-                    break;
-                case 3153:
-                    if (Botrk == null)
-                    {
-                        Botrk = new Botrk();
-                    }
-                    break;
-            }
+            var output = ObjectInitializer.FirstOrDefault(comparer => comparer.Key(id)).Value;
+
+            output?.Invoke();
+        }
+
+        public static void UnLoadItem(int id)
+        {
+            var output = ObjectDestroyer.FirstOrDefault(comparer => comparer.Key(id)).Value;
+
+            output?.Invoke();
         }
     }
 }

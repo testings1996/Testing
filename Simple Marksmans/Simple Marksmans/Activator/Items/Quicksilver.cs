@@ -2,7 +2,7 @@
 
 namespace Simple_Marksmans.Activator.Items
 {
-    internal class Quicksilver : Activator
+    internal class Quicksilver : Item
     {
         public Quicksilver()
         {

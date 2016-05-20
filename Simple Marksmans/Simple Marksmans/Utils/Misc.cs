@@ -33,7 +33,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EloBuddy;
+using SharpDX;
 using Simple_Marksmans.Interfaces;
+using Simple_Marksmans.Activator;
 
 namespace Simple_Marksmans.Utils
 {
@@ -92,12 +94,47 @@ namespace Simple_Marksmans.Utils
 
 
 
-        public static void UseItem(this IItem item)
+        public static void UseItem(this IItem item, Obj_AI_Base target = null)
         {
-            if (EloBuddy.SDK.Item.HasItem(item.ItemId))
+            if (item == null || item.ItemId == 0)
+                return;
+            
+            var myItem = new EloBuddy.SDK.Item(item.ItemId, item.Range);
+
+            if (!myItem.IsOwned() || !myItem.IsReady())
+                return;
+
+            if(target == null)
+                myItem.Cast();
+            else
             {
-                EloBuddy.SDK.Item.UseItem(item.ItemId);
+                myItem.Cast(target);
             }
+            Activator.Activator.UnLoadItem(item.ItemId);
+        }
+
+        public static void UseItem(this IItem item, Vector3? position)
+        {
+            if (item == null || item.ItemId == 0)
+                return;
+
+            var myItem = new EloBuddy.SDK.Item(item.ItemId, item.Range);
+
+            if (!myItem.IsOwned() || !myItem.IsReady())
+                return;
+
+            if (!position.HasValue)
+                myItem.Cast();
+            else
+            {
+                myItem.Cast(position.Value);
+            }
+            Activator.Activator.UnLoadItem(item.ItemId);
+        }
+
+        public static EloBuddy.SDK.Item ToItem(this IItem item)
+        {
+            return new EloBuddy.SDK.Item(item.ItemId, item.Range);
         }
     }
 }
