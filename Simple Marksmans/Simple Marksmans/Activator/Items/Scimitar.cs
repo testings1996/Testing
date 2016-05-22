@@ -6,10 +6,10 @@ namespace Simple_Marksmans.Activator.Items
     {
         public Scimitar()
         {
-            ItemName = "Scimitar";
-            ItemTargettingType = ItemTargettingType.Unit;
-            ItemId = 3153;
-            ItemType = ItemType.Offensive;
+            ItemName = "Mercurial Scimitar";
+            ItemTargettingType = ItemTargettingType.None;
+            ItemId = ItemIds.Scimitar;
+            ItemType = ItemType.Defensive;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }

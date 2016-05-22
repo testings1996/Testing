@@ -26,7 +26,6 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using EloBuddy;
 
 namespace Simple_Marksmans.Plugins.Twitch.Modes
 {
@@ -34,7 +33,6 @@ namespace Simple_Marksmans.Plugins.Twitch.Modes
     {
         public static void Execute()
         {
-            Chat.Print("LaneClear mode !");
         }
     }
 }

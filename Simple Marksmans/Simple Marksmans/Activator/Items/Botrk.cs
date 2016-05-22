@@ -6,9 +6,9 @@ namespace Simple_Marksmans.Activator.Items
     {
         public Botrk()
         {
-            ItemName = "Botrk";
+            ItemName = "BladeOfTheRuinedKing";
             ItemTargettingType = ItemTargettingType.Unit;
-            ItemId = 3153;
+            ItemId = ItemIds.BladeOfTheRuinedKing;
             ItemType = ItemType.Offensive;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;

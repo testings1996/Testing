@@ -6,10 +6,10 @@ namespace Simple_Marksmans.Activator.Items
     {
         public Quicksilver()
         {
-            ItemName = "Quicksilver";
-            ItemTargettingType = ItemTargettingType.Unit;
-            ItemId = 2003;
-            ItemType = ItemType.Offensive;
+            ItemName = "Quicksilver Sash";
+            ItemTargettingType = ItemTargettingType.None;
+            ItemId = ItemIds.Quicksilver;
+            ItemType = ItemType.Defensive;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }

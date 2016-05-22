@@ -39,7 +39,6 @@ namespace Simple_Marksmans.Plugins.Twitch.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Harass mode !");
         }
     }
 }

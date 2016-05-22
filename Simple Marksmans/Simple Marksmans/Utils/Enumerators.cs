@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simple_Marksmans.Utils
 {
@@ -12,11 +8,12 @@ namespace Simple_Marksmans.Utils
         Offensive,
         Potion
     }
-    
+
     public enum ItemTargettingType
     {
         Self,
-        Unit
+        Unit,
+        None
     }
 
     public enum ItemUsageWhen
@@ -24,5 +21,40 @@ namespace Simple_Marksmans.Utils
         Always,
         AfterAttack,
         ComboMode,
+    }
+
+    public enum ItemsEnum
+    {
+        HealthPotion,
+        RefillablePotion,
+        HuntersPotion,
+        CorruptingPotion,
+        ElixirofIron,
+        ElixirofSorcery,
+        ElixirofWrath,
+        Scimitar,
+        Quicksilver,
+        Ghostblade,
+        Cutlass,
+        Gunblade,
+        BladeOfTheRuinedKing
+    }
+
+    public enum ItemIds
+    {
+        HealthPotion = 2003,
+        Biscuit = 2010,
+        RefillablePotion = 2031,
+        HuntersPotion = 2032,
+        CorruptingPotion = 2033,
+        ElixirofIron = 2138,
+        ElixirofSorcery = 2139,
+        ElixirofWrath = 2140,
+        Scimitar = 3139,
+        Quicksilver = 3140,
+        Ghostblade = 3142,
+        Cutlass = 3144,
+        Gunblade = 3146,
+        BladeOfTheRuinedKing = 3153
     }
 }

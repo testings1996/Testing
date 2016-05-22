@@ -7,9 +7,9 @@ namespace Simple_Marksmans.Activator.Items
         public ElixirofWrath()
         {
             ItemName = "ElixirofWrath";
-            ItemTargettingType = ItemTargettingType.Unit;
-            ItemId = 3153;
-            ItemType = ItemType.Offensive;
+            ItemTargettingType = ItemTargettingType.None;
+            ItemId = ItemIds.ElixirofWrath;
+            ItemType = ItemType.Potion;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }

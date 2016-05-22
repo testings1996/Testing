@@ -7,9 +7,9 @@ namespace Simple_Marksmans.Activator.Items
         public HealthPotion()
         {
             ItemName = "HealthPotion";
-            ItemTargettingType = ItemTargettingType.Unit;
-            ItemId = 2003;
-            ItemType = ItemType.Offensive;
+            ItemTargettingType = ItemTargettingType.None;
+            ItemId = ItemIds.HealthPotion;
+            ItemType = ItemType.Potion;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }

@@ -7,9 +7,9 @@ namespace Simple_Marksmans.Activator.Items
         public RefillablePotion()
         {
             ItemName = "RefillablePotion";
-            ItemTargettingType = ItemTargettingType.Unit;
-            ItemId = 3153;
-            ItemType = ItemType.Offensive;
+            ItemTargettingType = ItemTargettingType.None;
+            ItemId = ItemIds.RefillablePotion;
+            ItemType = ItemType.Potion;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }

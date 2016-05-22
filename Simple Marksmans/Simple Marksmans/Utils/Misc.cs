@@ -26,16 +26,13 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using EloBuddy;
 using SharpDX;
 using Simple_Marksmans.Interfaces;
-using Simple_Marksmans.Activator;
 
 namespace Simple_Marksmans.Utils
 {
@@ -92,14 +89,18 @@ namespace Simple_Marksmans.Utils
             Chat.Print("<font size=\"21\"><font color=\"#0075B0\"><b>[Marksman AIO]</b></font> " + message + "</font>");
         }
 
-
-
         public static void UseItem(this IItem item, Obj_AI_Base target = null)
         {
             if (item == null || item.ItemId == 0)
                 return;
             
-            var myItem = new EloBuddy.SDK.Item(item.ItemId, item.Range);
+            var myItem = new EloBuddy.SDK.Item((int)item.ItemId, item.Range);
+
+            if (item.ItemId == ItemIds.HealthPotion)
+            {
+                if(!myItem.IsOwned())
+                    myItem = new EloBuddy.SDK.Item((int)ItemIds.Biscuit, item.Range);
+            }
 
             if (!myItem.IsOwned() || !myItem.IsReady())
                 return;
@@ -110,7 +111,9 @@ namespace Simple_Marksmans.Utils
             {
                 myItem.Cast(target);
             }
-            Activator.Activator.UnLoadItem(item.ItemId);
+
+            if(!myItem.IsOwned())
+                Activator.Activator.UnLoadItem((int) item.ItemId);
         }
 
         public static void UseItem(this IItem item, Vector3? position)
@@ -118,7 +121,13 @@ namespace Simple_Marksmans.Utils
             if (item == null || item.ItemId == 0)
                 return;
 
-            var myItem = new EloBuddy.SDK.Item(item.ItemId, item.Range);
+            var myItem = new EloBuddy.SDK.Item((int) item.ItemId, item.Range);
+
+            if (item.ItemId == ItemIds.HealthPotion)
+            {
+                if (!myItem.IsOwned())
+                    myItem = new EloBuddy.SDK.Item((int)ItemIds.Biscuit, item.Range);
+            }
 
             if (!myItem.IsOwned() || !myItem.IsReady())
                 return;
@@ -129,12 +138,14 @@ namespace Simple_Marksmans.Utils
             {
                 myItem.Cast(position.Value);
             }
-            Activator.Activator.UnLoadItem(item.ItemId);
+
+            if (!myItem.IsOwned())
+                Activator.Activator.UnLoadItem((int)item.ItemId);
         }
 
         public static EloBuddy.SDK.Item ToItem(this IItem item)
         {
-            return new EloBuddy.SDK.Item(item.ItemId, item.Range);
+            return new EloBuddy.SDK.Item((int) item.ItemId, item.Range);
         }
     }
 }

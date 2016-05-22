@@ -26,11 +26,7 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Interfaces
@@ -38,7 +34,7 @@ namespace Simple_Marksmans.Interfaces
     public interface IItem
     {
         string ItemName { get; set; }
-        int ItemId { get; set; }
+        ItemIds ItemId { get; set; }
         float Range { get; set; }
         ItemType ItemType { get; set; }
         ItemTargettingType ItemTargettingType { get; set; }
