@@ -26,7 +26,6 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Interfaces

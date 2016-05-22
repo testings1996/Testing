@@ -26,7 +26,6 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-
 namespace Simple_Marksmans.Plugins.Twitch.Modes
 {
     internal class LaneClear : Twitch
