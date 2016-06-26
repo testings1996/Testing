@@ -26,6 +26,8 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
+
+using EloBuddy;
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Interfaces
@@ -40,7 +42,7 @@ namespace Simple_Marksmans.Interfaces
         void JungleClear();
         void LastHit();
         void OnDraw();
-        void OnGapcloser(GapCloserEventArgs args);
-        void OnInterruptable();
+        void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args);
+        void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args);
     }
 }

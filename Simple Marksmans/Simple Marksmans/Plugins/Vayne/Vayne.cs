@@ -30,6 +30,7 @@ using System;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
+using EloBuddy.SDK.Utils;
 using Simple_Marksmans.Utils;
 using Simple_Marksmans.Utils.PermaShow;
 
@@ -54,14 +55,14 @@ namespace Simple_Marksmans.Plugins.Vayne
                 Modes.LaneClear.AfterAttack(target, args);
             }
         }
-        protected override void OnInterruptable()
+        protected override void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
-            throw new NotImplementedException();
+            Misc.PrintInfoMessage("[Vayne : OnInterruptible] "+sender.ChampionName + " | "+args.SpellSlot+" | "+args.DangerLevel);
         }
 
-        protected override void OnGapcloser(GapCloserEventArgs args)
+        protected override void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args)
         {
-            throw new NotImplementedException();
+            Chat.Print(args.Enemies);
         }
 
         protected override void OnDraw()

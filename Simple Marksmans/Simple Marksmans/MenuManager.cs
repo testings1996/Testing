@@ -26,16 +26,13 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
-using EloBuddy.SDK.Utils;
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans
@@ -44,7 +41,9 @@ namespace Simple_Marksmans
     {
         public static Menu Menu { get; set; }
         public static Menu GapcloserMenu { get; set; }
+        public static Menu InterrupterMenu { get; set; }
         public static int GapclosersFound { get; private set; }
+        public static int InterruptibleSpellsFound { get; private set; }
         public static int GapcloserScanRange { get; set; } = 1250;
 
         public static MenuValues MenuValues { get; set; } = new MenuValues();
@@ -55,50 +54,126 @@ namespace Simple_Marksmans
             Menu.AddSubMenu("Misc", "Miscc");
 
             BuildAntiGapcloserMenu();
+            BuildInterrupterMenu();
+        }
+
+        private static void BuildInterrupterMenu()
+        {
+            if (
+                !EntityManager.Heroes.Enemies.Any(
+                    x => Utils.Interrupter.InterruptibleList.Exists(e => e.ChampionName == x.ChampionName)))
+            {
+                return;
+            }
+
+            InterrupterMenu = Menu.AddSubMenu("Interrupter");
+            InterrupterMenu.AddGroupLabel("Global settings");
+            InterrupterMenu.Add("MenuManager.InterrupterMenu.Enabled", new CheckBox("Interrupter Enabled"));
+            InterrupterMenu.Add("MenuManager.InterrupterMenu.OnlyInCombo",
+                new CheckBox("Active only in Combo mode", false));
+            InterrupterMenu.AddSeparator(15);
+
+            foreach (
+                var enemy in
+                    EntityManager.Heroes.Enemies.Where(
+                        x => Utils.Interrupter.InterruptibleList.Exists(e => e.ChampionName == x.ChampionName))
+                )
+            {
+                var interruptibleSpells = Utils.Interrupter.InterruptibleList.FindAll(e => e.ChampionName == enemy.ChampionName);
+
+                if (interruptibleSpells.Count <= 0)
+                    continue;
+
+                InterrupterMenu.AddGroupLabel(enemy.ChampionName);
+
+                foreach (var interruptibleSpell in interruptibleSpells)
+                {
+                    var healthPercent = 0;
+
+                    switch (interruptibleSpell.DangerLevel)
+                    {
+                        case DangerLevel.High:
+                            healthPercent = 100;
+                            break;
+                        case DangerLevel.Medium:
+                            healthPercent = 75;
+                            break;
+                        case DangerLevel.Low:
+                            healthPercent = 50;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    InterrupterMenu.AddLabel("[" + interruptibleSpell.SpellSlot + "] " + interruptibleSpell.SpellName + " | Danger Level : "+ interruptibleSpell.DangerLevel);
+                    InterrupterMenu.Add(
+                        "MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot + ".Delay",
+                        new Slider("Delay", 0, 0, 500));
+                    InterrupterMenu.Add(
+                        "MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot + ".Hp",
+                        new Slider("Only if I'm below under {0} % of my HP", healthPercent));
+                    InterrupterMenu.Add(
+                        "MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot +
+                        ".Enemies",
+                        new Slider("Only if {0} or less enemies are near", 5, 1, 5));
+                    InterrupterMenu.Add(
+                        "MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot +
+                        ".Enabled",
+                        new CheckBox("Enabled"));
+
+                    InterruptibleSpellsFound++;
+                }
+            }
         }
 
         private static void BuildAntiGapcloserMenu()
         {
-
-            if (!EntityManager.Heroes.Enemies.Any(x => Gapcloser.GapCloserList.Exists(e => e.ChampName == x.ChampionName)))
+            if (
+                !EntityManager.Heroes.Enemies.Any(
+                    x => Gapcloser.GapCloserList.Exists(e => e.ChampName == x.ChampionName)))
             {
                 return;
             }
-            
+
             GapcloserMenu = Menu.AddSubMenu("Anti-Gapcloser");
             GapcloserMenu.AddGroupLabel("Global settings");
             GapcloserMenu.Add("MenuManager.GapcloserMenu.Enabled", new CheckBox("Anti-Gapcloser Enabled"));
-            GapcloserMenu.Add("MenuManager.GapcloserMenu.OnlyInCombo", new CheckBox("Only in combo", false));
+            GapcloserMenu.Add("MenuManager.GapcloserMenu.OnlyInCombo",
+                new CheckBox("Active only in Combo mode", false));
             GapcloserMenu.AddSeparator(15);
 
             foreach (
                 var enemy in
-                    EntityManager.Heroes.Enemies.Where(x => Gapcloser.GapCloserList.Exists(e => e.ChampName == x.ChampionName))
+                    EntityManager.Heroes.Enemies.Where(
+                        x => Gapcloser.GapCloserList.Exists(e => e.ChampName == x.ChampionName))
                 )
             {
                 var gapclosers = Gapcloser.GapCloserList.FindAll(e => e.ChampName == enemy.ChampionName);
-                var gapclosersCount = Gapcloser.GapCloserList.FindAll(e => e.ChampName == enemy.ChampionName).Count;
 
-                if (gapclosersCount > 0)
+                if (gapclosers.Count <= 0)
+                    continue;
+
+                GapcloserMenu.AddGroupLabel(enemy.ChampionName);
+
+                foreach (var gapcloser in gapclosers)
                 {
-                    GapcloserMenu.AddGroupLabel(enemy.ChampionName);
+                    GapcloserMenu.AddLabel("[" + gapcloser.SpellSlot + "] " + gapcloser.SpellName);
+                    GapcloserMenu.Add(
+                        "MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Delay",
+                        new Slider("Delay", 0, 0, 500));
+                    GapcloserMenu.Add(
+                        "MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Hp",
+                        new Slider("Only if I'm below under {0} % of my HP", 100));
+                    GapcloserMenu.Add(
+                        "MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot +
+                        ".Enemies",
+                        new Slider("Only if {0} or less enemies are near", 5, 1, 5));
+                    GapcloserMenu.Add(
+                        "MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot +
+                        ".Enabled",
+                        new CheckBox("Enabled"));
 
-                    for (var i = 0; i < gapclosersCount; i++)
-                    {
-                        var gapcloser = gapclosers[i];
-
-                        GapcloserMenu.AddLabel("[" + gapcloser.SpellSlot + "] " + gapcloser.SpellName);
-                        GapcloserMenu.Add("MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Delay",
-                            new Slider("Delay", 0, 0, 500));
-                        GapcloserMenu.Add("MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Hp",
-                            new Slider("Only if Im below of {0} % of my HP", 100));
-                        GapcloserMenu.Add("MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enemies",
-                            new Slider("Only if {0} or less enemies are near", 5, 1, 5));
-                        GapcloserMenu.Add("MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enabled",
-                            new CheckBox("Enabled"));
-
-                        GapclosersFound++;
-                    }
+                    GapclosersFound++;
                 }
             }
         }
@@ -159,4 +234,5 @@ namespace Simple_Marksmans
         //        }
         //    }
     }
+
 }

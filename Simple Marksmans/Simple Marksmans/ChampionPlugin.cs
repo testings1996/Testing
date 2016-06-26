@@ -26,9 +26,7 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
 using EloBuddy;
-using EloBuddy.SDK.Events;
 using Simple_Marksmans.Interfaces;
 using Simple_Marksmans.Utils;
 
@@ -46,14 +44,14 @@ namespace Simple_Marksmans
             OnDraw();
         }
 
-        void IHeroAddon.OnGapcloser(GapCloserEventArgs args)
+        void IHeroAddon.OnGapcloser(AIHeroClient sender, GapCloserEventArgs args)
         {
-            OnGapcloser(args);
+            OnGapcloser(sender, args);
         }
 
-        void IHeroAddon.OnInterruptable()
+        void IHeroAddon.OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
-            OnInterruptable();
+            OnInterruptible(sender, args);
         }
 
         void IHeroAddon.PermaActive()
@@ -87,8 +85,8 @@ namespace Simple_Marksmans
         }
         
         protected abstract void ComboMode();
-        protected abstract void OnGapcloser(GapCloserEventArgs args);
-        protected abstract void OnInterruptable();
+        protected abstract void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args);
+        protected abstract void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args);
         protected abstract void OnDraw();
         protected abstract void PermaActive();
         protected abstract void HarassMode();

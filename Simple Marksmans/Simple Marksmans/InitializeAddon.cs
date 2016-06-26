@@ -27,6 +27,7 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -40,6 +41,8 @@ namespace Simple_Marksmans
     {
         private static IHeroAddon _pluginInstance;
 
+        private static readonly Dictionary<InterrupterEventArgs, AIHeroClient> InterruptibleSpellsFound = new Dictionary<InterrupterEventArgs, AIHeroClient>(); 
+
         public static bool Initialize()
         {
             LoadPlugin();
@@ -52,7 +55,7 @@ namespace Simple_Marksmans
 
             Game.OnTick += Game_OnTick;
             Drawing.OnDraw += Drawing_OnDraw;
-            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast; ;
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
 
             return true;
         }
@@ -69,6 +72,28 @@ namespace Simple_Marksmans
 
             var menu = MenuManager.MenuValues;
 
+            if (MenuManager.InterruptibleSpellsFound > 0 && menu["MenuManager.InterrupterMenu.Enabled"])
+            {
+                if (Utils.Interrupter.InterruptibleList.Exists(e => e.ChampionName == enemy.ChampionName) && ((menu["MenuManager.InterrupterMenu.OnlyInCombo"] && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo)) || !menu["MenuManager.InterrupterMenu.OnlyInCombo"]))
+                {
+                    foreach (var interruptibleSpell in 
+                            Utils.Interrupter.InterruptibleList.Where(x => x.ChampionName == enemy.ChampionName && x.SpellSlot == args.Slot))
+                    {
+                        var hp = menu["MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot + ".Hp", true];
+                        var enemies =menu["MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot +".Enemies", true];
+
+                        if (menu["MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot +".Enabled"] &&
+                            Player.Instance.HealthPercent <= hp &&
+                            Player.Instance.CountEnemiesInRange(MenuManager.GapcloserScanRange) <= enemies)
+                        {
+                            InterruptibleSpellsFound.Add(new InterrupterEventArgs(args.Target, args.Slot, interruptibleSpell.DangerLevel, interruptibleSpell.SpellName, args.Start, args.End,
+                                menu["MenuManager.InterrupterMenu." + enemy.ChampionName + "." + interruptibleSpell.SpellSlot + ".Delay",true],
+                                enemies, hp, Game.Time * 1000), enemy);
+                        }
+                    }
+                }
+            }
+
             if (MenuManager.GapclosersFound == 0)
                 return;
 
@@ -76,26 +101,29 @@ namespace Simple_Marksmans
                 (menu["MenuManager.GapcloserMenu.OnlyInCombo"] && !Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo)) || !Gapcloser.GapCloserList.Exists(e => e.ChampName == enemy.ChampionName))
                 return;
 
-            foreach (var gapcloser in Gapcloser.GapCloserList.Where(x=>x.ChampName == enemy.ChampionName && x.SpellSlot == args.Slot))
+            foreach (
+                var gapcloser in
+                    Gapcloser.GapCloserList.Where(x => x.ChampName == enemy.ChampionName && x.SpellSlot == args.Slot))
             {
-                var hp = menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Hp", true];
-                var enemies = menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enemies", true];
+                var hp =
+                    menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Hp", true];
+                var enemies =
+                    menu[
+                        "MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enemies", true
+                        ];
 
-                if (menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enabled"])// && Player.Instance.HealthPercent >= hp && Player.Instance.CountEnemiesInRange(MenuManager.GapcloserScanRange) <= enemies)
+                if (menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enabled"] &&
+                    Player.Instance.HealthPercent <= hp &&
+                    Player.Instance.CountEnemiesInRange(MenuManager.GapcloserScanRange) <= enemies)
                 {
-                    _pluginInstance.OnGapcloser(new GapCloserEventArgs
-                    {
-                        Delay = menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Delay", true],
-                        HealthPercent = hp,
-                        Enemies = enemies,
-                        Sender = enemy,
-                        GapcloserType = args.Target == null ? GapcloserTypes.Skillshot : GapcloserTypes.Targeted,
-                        Target = args.Target,
-                        End = args.End,
-                        Start = args.Start,
-                        SpellSlot = args.Slot,
-                        GameTime = Game.Time * 1000
-                    });
+                    _pluginInstance.OnGapcloser(enemy,
+                        new GapCloserEventArgs(args.Target, args.Slot,
+                            args.Target == null ? GapcloserTypes.Skillshot : GapcloserTypes.Targeted,
+                            args.Start, args.End,
+                            menu[
+                                "MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Delay",
+                                true], enemies, hp, Game.Time*1000));
+
                 }
             }
         }
@@ -122,6 +150,16 @@ namespace Simple_Marksmans
 
         private static void Game_OnTick(EventArgs args)
         {
+            foreach (var index in InterruptibleSpellsFound.Where(e=>(int)e.Key.GameTime + 9000 <= (int)Game.Time * 1000 || (!e.Value.Spellbook.IsChanneling && !e.Value.Spellbook.IsCharging && !e.Value.Spellbook.IsCastingSpell)).ToList())
+            {
+                InterruptibleSpellsFound.Remove(index.Key);
+            }
+
+            foreach (var interruptibleSpell in InterruptibleSpellsFound)
+            {
+                _pluginInstance.OnInterruptible(interruptibleSpell.Value, interruptibleSpell.Key);
+            }
+            
             _pluginInstance.PermaActive();
 
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))

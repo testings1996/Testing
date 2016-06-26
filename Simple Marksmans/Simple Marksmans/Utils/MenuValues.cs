@@ -154,6 +154,8 @@ namespace Simple_Marksmans.Utils
                 {
                     case "GapcloserMenu":
                         return MenuManager.GapcloserMenu;
+                    case "InterrupterMenu":
+                        return MenuManager.InterrupterMenu;
                     default:
                         return MenuManager.Menu;
                 }

@@ -235,6 +235,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Enumerators.cs" />
     <Compile Include="Utils\Gapclosers.cs" />
+    <Compile Include="Utils\Interrupter.cs" />
     <Compile Include="Utils\MenuValues.cs" />
     <Compile Include="Utils\Misc.cs" />
     <Compile Include="Utils\ObjAiBaseExtensions.cs" />

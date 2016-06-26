@@ -45,12 +45,12 @@ namespace Simple_Marksmans.Plugins.Jhin
         protected override void OnDraw()
         {
         }
-        protected override void OnInterruptable()
+        protected override void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
             throw new NotImplementedException();
         }
 
-        protected override void OnGapcloser(GapCloserEventArgs args)
+        protected override void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args)
         {
             throw new NotImplementedException();
         }

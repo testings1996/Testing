@@ -30,8 +30,6 @@ using System;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
-using EloBuddy.SDK.Events;
-using EloBuddy.SDK.Utils;
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Ashe
@@ -48,28 +46,18 @@ namespace Simple_Marksmans.Plugins.Ashe
             E = new Spell.Skillshot(SpellSlot.E, uint.MaxValue, SkillShotType.Linear);
             R = new Spell.Skillshot(SpellSlot.R, uint.MaxValue, SkillShotType.Linear, 250, 1600, 120);
         }
-        
+
         protected override void OnDraw()
         {
         }
         
-        protected override void OnInterruptable()
+        protected override void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
-            throw new NotImplementedException();
         }
 
-        protected override void OnGapcloser(GapCloserEventArgs args)
+        protected override void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args)
         {
-            Logger.Debug(args.Delay.ToString());
-            Logger.Debug(args.Enemies.ToString());
-            Logger.Debug(args.HealthPercent.ToString());
-            Logger.Debug(args.SpellSlot.ToString());
-            Logger.Debug(args.End.ToString());
-            Logger.Debug(args.Start.ToString());
-            Logger.Debug(args.GapcloserType.ToString());
-            Logger.Debug(args.Sender.ChampionName);
-            Logger.Debug(args.GameTime+"");
-
+            Chat.Print(args.Enemies);
         }
 
         protected override void PermaActive()

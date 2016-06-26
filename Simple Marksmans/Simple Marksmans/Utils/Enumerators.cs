@@ -89,6 +89,7 @@ namespace Simple_Marksmans.Utils
 
     public enum GapcloserTypes
     {
-        Targeted, Skillshot
+        Targeted,
+        Skillshot
     }
 }
