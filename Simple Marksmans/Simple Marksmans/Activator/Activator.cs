@@ -33,9 +33,11 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
+using SharpDX;
 using Simple_Marksmans.Activator.Items;
 using Simple_Marksmans.Interfaces;
 using Simple_Marksmans.Utils;
+using Simple_Marksmans.Utils.PermaShow;
 
 namespace Simple_Marksmans.Activator
 {
@@ -91,6 +93,11 @@ namespace Simple_Marksmans.Activator
             ActivatorMenu = MainMenu.AddMenu("Marksman AIO : Activator", "MarksmanAIOActivator");
             ActivatorMenu.AddGroupLabel("Activator settings : ");
             ActivatorMenu.Add("Activator.Enable", new CheckBox("Enable activator"));
+            ActivatorMenu.Add("Activator.xD1", new Slider("1", 222, -100, 1900));
+            ActivatorMenu.Add("Activator.xD2", new Slider("X", 350, 0, 1900));
+            ActivatorMenu.Add("Activator.xD22", new Slider("X2", 350, 190, 550));
+            ActivatorMenu.Add("Activator.xD3", new Slider("Y", 350, 50, 550));
+            ActivatorMenu.Add("Activator.xD4", new Slider("Y2", 350, 50, 550));
             ScanForItems();
             InitializeMenu();
 
@@ -108,7 +115,7 @@ namespace Simple_Marksmans.Activator
         {
             if (!sender.IsMe || !MenuManager.MenuValues["Activator.Enable"])
                 return;
-
+            
             var menu = MenuManager.MenuValues;
             var buffType = args.Buff.Type == BuffType.Flee ? BuffType.Fear : args.Buff.Type;
             var scimitar = menu["Activator.CleanseMenu.Scimitar"];
@@ -179,18 +186,16 @@ namespace Simple_Marksmans.Activator
                         Items[enumValues].UseItem();
                     }
                 }
-                if (Items[enumValues] != null && Items[enumValues].ItemType != ItemType.Potion && MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName])
+                if (Items[enumValues] != null && Items[enumValues].ItemType != ItemType.Potion && Items[enumValues].ItemType != ItemType.Cleanse && MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName])
                 {
                     var myMinHp = MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName + ".MyMinHP", true];
                     var targetsMinHp = MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName + ".TargetsMinHP", true];
                     var ifEnemiesNear = MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName + ".IfEnemiesNear", true];
                     var target = TargetSelector.GetTarget(800, DamageType.Physical);
 
-
                     if (target == null || ((!MenuManager.MenuValues["Activator.ItemsMenu.OnlyInCombo"] || !Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo)) && MenuManager.MenuValues["Activator.ItemsMenu.OnlyInCombo"]))
                         return;
-
-
+                    
                     if ((int) Player.Instance.HealthPercent <= myMinHp && (int) target.HealthPercent <= targetsMinHp &&
                         Player.Instance.Position.CountEnemiesInRange(Player.Instance.GetAutoAttackRange() + 250) >=
                         ifEnemiesNear)
@@ -200,7 +205,7 @@ namespace Simple_Marksmans.Activator
                         {
                             Items[enumValues].ToItem().Cast(target);
                         }
-                        else if (Items[enumValues].ToItem().IsReady() && Items[enumValues].Range == 0)
+                        else if (Items[enumValues].ToItem().IsReady() && Items[enumValues].Range == 0f)
                         {
                             switch (Items[enumValues].ItemTargettingType)
                             {
@@ -213,6 +218,8 @@ namespace Simple_Marksmans.Activator
                                 case ItemTargettingType.Self:
                                     Items[enumValues].ToItem().Cast(Player.Instance);
                                     break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
                             }
                         }
                     }
@@ -232,23 +239,21 @@ namespace Simple_Marksmans.Activator
 
         private static void Obj_AI_Base_OnDamage(AttackableUnit sender, AttackableUnitDamageEventArgs args)
         {
-            if (!MenuManager.MenuValues["Activator.Enable"] || !MenuManager.MenuValues["Activator.PotionsAndElixirsMenu.OnlyIfTakingDamage"] || !args.Target.IsMe ||
-                (int) Player.Instance.HealthPercent >=
-                MenuManager.MenuValues["Activator.PotionsAndElixirsMenu.BelowHealth", true] || Player.Instance.IsUsingHealingPotion())
+            if (!MenuManager.MenuValues["Activator.Enable"] || !MenuManager.MenuValues["Activator.PotionsAndElixirsMenu.OnlyIfTakingDamage"] || !args.Target.IsMe || (int) Player.Instance.HealthPercent >= MenuManager.MenuValues["Activator.PotionsAndElixirsMenu.BelowHealth", true] || Player.Instance.IsUsingHealingPotion())
                 return;
 
-            if(Items[ItemsEnum.HealthPotion] != null)
+            if (Items[ItemsEnum.HealthPotion] != null)
                 Items[ItemsEnum.HealthPotion].UseItem();
-            else if(Items[ItemsEnum.RefillablePotion] != null)
+            else if (Items[ItemsEnum.RefillablePotion] != null)
                 Items[ItemsEnum.RefillablePotion].UseItem();
-            else if(Items[ItemsEnum.HuntersPotion] != null)
+            else if (Items[ItemsEnum.HuntersPotion] != null)
                 Items[ItemsEnum.HuntersPotion].UseItem();
             else
             {
                 Items[ItemsEnum.CorruptingPotion]?.UseItem();
             }
         }
-        
+
         private static void Shop_OnBuyItem(AIHeroClient sender, ShopActionEventArgs args)
         {
             if (!MenuManager.MenuValues["Activator.Enable"])
@@ -290,58 +295,42 @@ namespace Simple_Marksmans.Activator
             PotionsAndElixirsMenu.AddGroupLabel("Potions and Elixirs : ");
             PotionsAndElixirsMenu.AddLabel("Potions : ");
             PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.UsePotions", new CheckBox("Use Potions"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.OnlyIfTakingDamage",
-                new CheckBox("Use Potions only if taking damage"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.BelowHealth",
-                new Slider("Use potions if health is below {0}%", 35));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.OnlyIfTakingDamage", new CheckBox("Use Potions only if taking damage"));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.BelowHealth", new Slider("Use potions if health is below {0}%", 35));
             PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.HealthPotion", new CheckBox("Use Health Potion"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.RefillablePotion",
-                new CheckBox("Use Refillable Potion"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.HuntersPotion",
-                new CheckBox("Use Hunter's Potion"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.CorruptingPotion",
-                new CheckBox("Use Corrupting Potion"));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.RefillablePotion", new CheckBox("Use Refillable Potion"));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.HuntersPotion", new CheckBox("Use Hunter's Potion"));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.CorruptingPotion", new CheckBox("Use Corrupting Potion"));
             PotionsAndElixirsMenu.AddSeparator(10);
             PotionsAndElixirsMenu.AddLabel("Elixirs : ");
             PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.ElixirofIron", new CheckBox("Use Elixir of Iron"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.ElixirofSorcery",
-                new CheckBox("Use Elixir of Sorcery"));
-            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.ElixirofWrath",
-                new CheckBox("Use Elixir of Wrath"));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.ElixirofSorcery", new CheckBox("Use Elixir of Sorcery"));
+            PotionsAndElixirsMenu.Add("Activator.PotionsAndElixirsMenu.ElixirofWrath", new CheckBox("Use Elixir of Wrath"));
             ItemsMenu = ActivatorMenu.AddSubMenu("Items");
             ItemsMenu.AddGroupLabel("Items : ");
             ItemsMenu.AddLabel("Bilgewater Cutlass : ");
             ItemsMenu.Add("Activator.ItemsMenu.Cutlass", new CheckBox("Use Bilgewater Cutlass"));
             ItemsMenu.Add("Activator.ItemsMenu.Cutlass.MyMinHP", new Slider("Only if my health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.Cutlass.TargetsMinHP",
-                new Slider("Only if target's health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.Cutlass.IfEnemiesNear",
-                new Slider("Only if {0} or more enemies are near", 1, 1, 5));
+            ItemsMenu.Add("Activator.ItemsMenu.Cutlass.TargetsMinHP", new Slider("Only if target's health is below {0}%", 100));
+            ItemsMenu.Add("Activator.ItemsMenu.Cutlass.IfEnemiesNear", new Slider("Only if {0} or more enemies are near", 1, 1, 5));
             ItemsMenu.AddSeparator(10);
             ItemsMenu.AddLabel("Blade of the Ruined King : ");
             ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing", new CheckBox("Use Blade of the Ruined King"));
-            ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing.MyMinHP",
-                new Slider("Only if my health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing.TargetsMinHP",
-                new Slider("Only if target's health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing.IfEnemiesNear",
-                new Slider("Only if {0} or more enemies are near", 1, 1, 5));
+            ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing.MyMinHP", new Slider("Only if my health is below {0}%", 100));
+            ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing.TargetsMinHP", new Slider("Only if target's health is below {0}%", 100));
+            ItemsMenu.Add("Activator.ItemsMenu.BladeOfTheRuinedKing.IfEnemiesNear", new Slider("Only if {0} or more enemies are near", 1, 1, 5));
             ItemsMenu.AddSeparator(10);
             ItemsMenu.AddLabel("Hextech Gunblade : ");
             ItemsMenu.Add("Activator.ItemsMenu.Gunblade", new CheckBox("Use Hextech Gunblade"));
             ItemsMenu.Add("Activator.ItemsMenu.Gunblade.MyMinHP", new Slider("Only if my health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.Gunblade.TargetsMinHP",
-                new Slider("Only if target's health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.Gunblade.IfEnemiesNear",
-                new Slider("Only if {0} or more enemies are near", 1, 1, 5));
+            ItemsMenu.Add("Activator.ItemsMenu.Gunblade.TargetsMinHP", new Slider("Only if target's health is below {0}%", 100));
+            ItemsMenu.Add("Activator.ItemsMenu.Gunblade.IfEnemiesNear", new Slider("Only if {0} or more enemies are near", 1, 1, 5));
             ItemsMenu.AddSeparator(10);
             ItemsMenu.AddLabel("Youmuu's Ghostblade : ");
             ItemsMenu.Add("Activator.ItemsMenu.Ghostblade", new CheckBox("Use Youmuu's Ghostblade"));
             ItemsMenu.Add("Activator.ItemsMenu.Ghostblade.MyMinHP", new Slider("Only if my health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.Ghostblade.TargetsMinHP",
-                new Slider("Only if target's health is below {0}%", 100));
-            ItemsMenu.Add("Activator.ItemsMenu.Ghostblade.IfEnemiesNear",
-                new Slider("Only if {0} or more enemies are near", 1, 1, 5));
+            ItemsMenu.Add("Activator.ItemsMenu.Ghostblade.TargetsMinHP", new Slider("Only if target's health is below {0}%", 100));
+            ItemsMenu.Add("Activator.ItemsMenu.Ghostblade.IfEnemiesNear", new Slider("Only if {0} or more enemies are near", 1, 1, 5));
             ItemsMenu.AddSeparator(10);
             ItemsMenu.AddLabel("Misc settings : ");
             ItemsMenu.Add("Activator.ItemsMenu.OnlyInCombo", new CheckBox("Use items only in combo mode"));
@@ -367,13 +356,8 @@ namespace Simple_Marksmans.Activator
             CleanseMenu.Add("Activator.CleanseMenu.QssHP", new Slider("Cleanse only if my health is below {0}%", 100));
 
             var buffDuration = CleanseMenu.Add("Activator.CleanseMenu.BuffDuration", new Slider(" ", 15));
-            buffDuration.DisplayName = "Cleanse only if buff duration is longer than " + buffDuration.CurrentValue*50 +
-                                       " milliseconds";
-            buffDuration.OnValueChange += delegate(ValueBase<int> sender, ValueBase<int>.ValueChangeArgs args)
-            {
-                sender.DisplayName = "Cleanse only if buff duration is higher than " + args.NewValue*50 +
-                                     " milliseconds";
-            };
+            buffDuration.DisplayName = "Cleanse only if buff duration is longer than " + buffDuration.CurrentValue*50 + " milliseconds";
+            buffDuration.OnValueChange += delegate(ValueBase<int> sender, ValueBase<int>.ValueChangeArgs args) { sender.DisplayName = "Cleanse only if buff duration is higher than " + args.NewValue*50 + " milliseconds"; };
 
             CleanseMenu.Add("Activator.CleanseMenu.MinimumDelay", new Slider("Minimum delay", 0, 0, 500));
             CleanseMenu.Add("Activator.CleanseMenu.MaximumDelay", new Slider("Maximum delay", 350, 0, 500));
@@ -393,7 +377,7 @@ namespace Simple_Marksmans.Activator
         {
             if (!Enum.IsDefined(typeof(ItemIds), id))
                 return;
-            
+
             var output = ObjectDestroyer.FirstOrDefault(comparer => comparer.Key((ItemIds) id)).Value;
 
             output?.Invoke();

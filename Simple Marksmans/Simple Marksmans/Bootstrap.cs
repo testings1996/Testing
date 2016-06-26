@@ -27,12 +27,15 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 using EloBuddy;
+using EloBuddy.SDK;
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans
 {
     internal class Bootstrap
     {
+        public static bool MenuLoaded { get; set; }
+
         public static void Initialize()
         {
             var pluginInitialized = InitializeAddon.Initialize();
@@ -40,10 +43,16 @@ namespace Simple_Marksmans
             if (!pluginInitialized)
                 return;
 
-            MenuManager.CreateMenu();
-            Activator.Activator.InitializeActivator();
+            Core.DelayAction(
+                () =>
+                {
+                    MenuManager.CreateMenu();
+                    Activator.Activator.InitializeActivator();
+                    MenuLoaded = true;
 
-            Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName + "</font></b> loaded successfully.");
+                    Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName +
+                                          "</font></b> loaded successfully.");
+                }, 250);
         }
     }
 }

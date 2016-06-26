@@ -29,22 +29,49 @@
 using System;
 using EloBuddy;
 using EloBuddy.SDK;
-using Simple_Marksmans.Interfaces;
-using Color = System.Drawing.Color;
+using EloBuddy.SDK.Enumerations;
+using EloBuddy.SDK.Events;
+using EloBuddy.SDK.Utils;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Ashe
 {
     internal class Ashe : ChampionPlugin
     {
+        public static Spell.Active Q;
+        public static Spell.Skillshot W, E, R;
+
         static Ashe()
         {
-
+            Q = new Spell.Active(SpellSlot.Q);
+            W = new Spell.Skillshot(SpellSlot.W, 1225, SkillShotType.Cone, 250, 2000, 20);
+            E = new Spell.Skillshot(SpellSlot.E, uint.MaxValue, SkillShotType.Linear);
+            R = new Spell.Skillshot(SpellSlot.R, uint.MaxValue, SkillShotType.Linear, 250, 1600, 120);
         }
-
+        
         protected override void OnDraw()
         {
         }
         
+        protected override void OnInterruptable()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnGapcloser(GapCloserEventArgs args)
+        {
+            Logger.Debug(args.Delay.ToString());
+            Logger.Debug(args.Enemies.ToString());
+            Logger.Debug(args.HealthPercent.ToString());
+            Logger.Debug(args.SpellSlot.ToString());
+            Logger.Debug(args.End.ToString());
+            Logger.Debug(args.Start.ToString());
+            Logger.Debug(args.GapcloserType.ToString());
+            Logger.Debug(args.Sender.ChampionName);
+            Logger.Debug(args.GameTime+"");
+
+        }
+
         protected override void PermaActive()
         {
             Modes.PermaActive.Execute();

@@ -30,6 +30,7 @@ using System;
 using EloBuddy;
 using EloBuddy.SDK;
 using Simple_Marksmans.Interfaces;
+using Simple_Marksmans.Utils;
 using Color = System.Drawing.Color;
 
 namespace Simple_Marksmans.Plugins.MissFortune
@@ -44,7 +45,15 @@ namespace Simple_Marksmans.Plugins.MissFortune
         protected override void OnDraw()
         {
         }
+        protected override void OnInterruptable()
+        {
+            throw new NotImplementedException();
+        }
 
+        protected override void OnGapcloser(GapCloserEventArgs args)
+        {
+            throw new NotImplementedException();
+        }
         protected override void PermaActive()
         {
             Modes.PermaActive.Execute();

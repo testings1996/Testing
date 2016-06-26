@@ -27,13 +27,12 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 using System;
-using System.Reflection;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
-using Simple_Marksmans.Interfaces;
-using Simple_Marksmans.Plugins.Quinn.Modes;
-using Color = System.Drawing.Color;
+using Simple_Marksmans.Utils;
+using Simple_Marksmans.Utils.PermaShow;
+
 
 namespace Simple_Marksmans.Plugins.Vayne
 {
@@ -55,9 +54,19 @@ namespace Simple_Marksmans.Plugins.Vayne
                 Modes.LaneClear.AfterAttack(target, args);
             }
         }
+        protected override void OnInterruptable()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnGapcloser(GapCloserEventArgs args)
+        {
+            throw new NotImplementedException();
+        }
 
         protected override void OnDraw()
         {
+
         }
 
         protected override void PermaActive()

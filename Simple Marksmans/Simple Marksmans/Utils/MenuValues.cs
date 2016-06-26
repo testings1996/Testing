@@ -148,6 +148,15 @@ namespace Simple_Marksmans.Utils
                     default:
                         return Activator.Activator.ActivatorMenu;
                 }
+            } else if (splitted[0] == "MenuManager")
+            {
+                switch (splitted[1])
+                {
+                    case "GapcloserMenu":
+                        return MenuManager.GapcloserMenu;
+                    default:
+                        return MenuManager.Menu;
+                }
             }
             return null;
         }

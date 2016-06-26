@@ -27,8 +27,10 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 using System;
+using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Events;
 using Simple_Marksmans.Interfaces;
 using Simple_Marksmans.Utils;
 
@@ -50,10 +52,54 @@ namespace Simple_Marksmans
 
             Game.OnTick += Game_OnTick;
             Drawing.OnDraw += Drawing_OnDraw;
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast; ;
 
             return true;
         }
-        
+
+        private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (sender.IsMe)
+                return;
+
+            var enemy = sender as AIHeroClient;
+
+            if (enemy == null)
+                return;
+
+            var menu = MenuManager.MenuValues;
+
+            if (MenuManager.GapclosersFound == 0)
+                return;
+
+            if (!menu["MenuManager.GapcloserMenu.Enabled"] ||
+                (menu["MenuManager.GapcloserMenu.OnlyInCombo"] && !Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo)) || !Gapcloser.GapCloserList.Exists(e => e.ChampName == enemy.ChampionName))
+                return;
+
+            foreach (var gapcloser in Gapcloser.GapCloserList.Where(x=>x.ChampName == enemy.ChampionName && x.SpellSlot == args.Slot))
+            {
+                var hp = menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Hp", true];
+                var enemies = menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enemies", true];
+
+                if (menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Enabled"])// && Player.Instance.HealthPercent >= hp && Player.Instance.CountEnemiesInRange(MenuManager.GapcloserScanRange) <= enemies)
+                {
+                    _pluginInstance.OnGapcloser(new GapCloserEventArgs
+                    {
+                        Delay = menu["MenuManager.GapcloserMenu." + enemy.ChampionName + "." + gapcloser.SpellSlot + ".Delay", true],
+                        HealthPercent = hp,
+                        Enemies = enemies,
+                        Sender = enemy,
+                        GapcloserType = args.Target == null ? GapcloserTypes.Skillshot : GapcloserTypes.Targeted,
+                        Target = args.Target,
+                        End = args.End,
+                        Start = args.Start,
+                        SpellSlot = args.Slot,
+                        GameTime = Game.Time * 1000
+                    });
+                }
+            }
+        }
+
         public static void LoadPlugin()
         {
             var typeName = "Simple_Marksmans.Plugins." + Player.Instance.ChampionName + "." + Player.Instance.ChampionName;

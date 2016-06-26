@@ -36,6 +36,10 @@
     <Reference Include="EloBuddy">
       <HintPath>..\..\..\..\..\..\..\..\EloBuddy\System\EloBuddy.dll</HintPath>
     </Reference>
+    <Reference Include="EloBuddy.Sandbox, Version=1.0.5934.34859, Culture=neutral, PublicKeyToken=d671ef5d8e7e69a5, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\EloBuddy\System\EloBuddy.Sandbox.dll</HintPath>
+    </Reference>
     <Reference Include="EloBuddy.SDK">
       <HintPath>..\..\..\..\..\..\..\..\EloBuddy\System\EloBuddy.SDK.dll</HintPath>
     </Reference>
@@ -230,9 +234,14 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\Enumerators.cs" />
+    <Compile Include="Utils\Gapclosers.cs" />
     <Compile Include="Utils\MenuValues.cs" />
     <Compile Include="Utils\Misc.cs" />
     <Compile Include="Utils\ObjAiBaseExtensions.cs" />
+    <Compile Include="Utils\PermaShow\ColorPicker.cs" />
+    <Compile Include="Utils\PermaShow\PermaShow.cs" />
+    <Compile Include="Utils\PermaShow\Rectangle.cs" />
+    <Compile Include="Utils\PermaShow\Text.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

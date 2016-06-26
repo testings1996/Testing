@@ -27,6 +27,8 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 using EloBuddy;
+using EloBuddy.SDK;
+using EloBuddy.SDK.Enumerations;
 
 namespace Simple_Marksmans.Plugins.Ashe.Modes
 {
@@ -34,7 +36,20 @@ namespace Simple_Marksmans.Plugins.Ashe.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Combo mode !");
+            /*var t = TargetSelector.GetTarget(W.Range, DamageType.Magical);
+
+            if (t != null)
+            {
+                var pred = Prediction.Position.PredictConeSpell(t, 1200, 57, 250, 2000, Player.Instance.ServerPosition);
+
+                Chat.Print(pred.HitChance);
+
+                if (pred.HitChance == HitChance.High)
+                {
+                    W.Cast(pred.CastPosition);
+
+                }
+            }*/
         }
     }
 }

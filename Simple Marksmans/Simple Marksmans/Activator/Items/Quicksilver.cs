@@ -37,7 +37,7 @@ namespace Simple_Marksmans.Activator.Items
             ItemName = "Quicksilver Sash";
             ItemTargettingType = ItemTargettingType.None;
             ItemId = ItemIds.Quicksilver;
-            ItemType = ItemType.Defensive;
+            ItemType = ItemType.Cleanse;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }

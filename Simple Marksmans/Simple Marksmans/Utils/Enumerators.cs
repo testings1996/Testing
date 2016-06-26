@@ -34,6 +34,7 @@ namespace Simple_Marksmans.Utils
     {
         Defensive,
         Offensive,
+        Cleanse,
         Potion
     }
 
@@ -84,5 +85,10 @@ namespace Simple_Marksmans.Utils
         Cutlass = 3144,
         Gunblade = 3146,
         BladeOfTheRuinedKing = 3153
+    }
+
+    public enum GapcloserTypes
+    {
+        Targeted, Skillshot
     }
 }

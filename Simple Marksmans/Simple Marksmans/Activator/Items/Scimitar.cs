@@ -37,7 +37,7 @@ namespace Simple_Marksmans.Activator.Items
             ItemName = "Mercurial Scimitar";
             ItemTargettingType = ItemTargettingType.None;
             ItemId = ItemIds.Scimitar;
-            ItemType = ItemType.Defensive;
+            ItemType = ItemType.Cleanse;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
             Range = 550;
         }
