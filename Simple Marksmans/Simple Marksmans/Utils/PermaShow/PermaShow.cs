@@ -17,9 +17,9 @@ namespace Simple_Marksmans.Utils.PermaShow
         private readonly List<SeparatorData> _underlines = new List<SeparatorData>();
         private readonly List<MenuItem> _menuItems = new List<MenuItem>();
  
-        private Text _headerText;
+        private readonly Text _headerText;
 
-        private bool _dragging;
+        public bool IsMoving { get; private set; }
         private readonly Vector2 _defaultPosition = new Vector2(190, 90);
 
         public Vector2 Position { get; set; }
@@ -108,10 +108,10 @@ namespace Simple_Marksmans.Utils.PermaShow
             {
                 case (uint)WindowMessages.LeftButtonDown:
                     if (IsPositionOnPermaShow(Game.CursorPos2D))
-                        _dragging = true;
+                        IsMoving = true;
                     break;
                 case (uint)WindowMessages.LeftButtonUp:
-                    _dragging = false;
+                    IsMoving = false;
                     break;
                 default:
                     break;
@@ -123,7 +123,7 @@ namespace Simple_Marksmans.Utils.PermaShow
             if(!Enabled)
                 return;
             
-            if (_dragging)
+            if (IsMoving)
             {
                 Position = Game.CursorPos2D;
                 UpdatePositions();

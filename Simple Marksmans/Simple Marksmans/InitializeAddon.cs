@@ -1,4 +1,4 @@
-﻿#region Licensing
+﻿     #region Licensing
 //  --------------------------------------------------------------------------------------------------------------------
 //  <copyright file="InitializeAddon.cs" company="EloBuddy">
 // 
@@ -32,6 +32,8 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
+using Newtonsoft.Json.Linq;
+using SharpDX;
 using Simple_Marksmans.Interfaces;
 using Simple_Marksmans.Utils;
 
@@ -39,7 +41,7 @@ namespace Simple_Marksmans
 {
     internal static class InitializeAddon
     {
-        private static IHeroAddon _pluginInstance;
+        internal static IHeroAddon PluginInstance { get; private set; }
 
         private static readonly Dictionary<InterrupterEventArgs, AIHeroClient> InterruptibleSpellsFound = new Dictionary<InterrupterEventArgs, AIHeroClient>(); 
 
@@ -47,12 +49,12 @@ namespace Simple_Marksmans
         {
             LoadPlugin();
 
-            if (_pluginInstance == null)
+            if (PluginInstance == null)
             {
                 Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName + "</font></b> is not yet supported.");
                 return false;
             }
-
+            
             Game.OnTick += Game_OnTick;
             Drawing.OnDraw += Drawing_OnDraw;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
@@ -116,7 +118,7 @@ namespace Simple_Marksmans
                     Player.Instance.HealthPercent <= hp &&
                     Player.Instance.CountEnemiesInRange(MenuManager.GapcloserScanRange) <= enemies)
                 {
-                    _pluginInstance.OnGapcloser(enemy,
+                    PluginInstance.OnGapcloser(enemy,
                         new GapCloserEventArgs(args.Target, args.Slot,
                             args.Target == null ? GapcloserTypes.Skillshot : GapcloserTypes.Targeted,
                             args.Start, args.End,
@@ -133,19 +135,22 @@ namespace Simple_Marksmans
             var typeName = "Simple_Marksmans.Plugins." + Player.Instance.ChampionName + "." + Player.Instance.ChampionName;
 
             var type = Type.GetType(typeName);
-            if (type != null)
-            {
-                //var constructorInfo = type.GetConstructor(new Type[] {});
 
-                //_plugin = (IHeroAddon) constructorInfo?.Invoke(new object[] {});
+            if (type == null)
+                return;
 
-                _pluginInstance = (IHeroAddon)System.Activator.CreateInstance(type);
-            }
+            Bootstrap.SavedColorPickerData = FileHandler.ReadDataFile(FileHandler.ColorFileName) != null ? FileHandler.ReadDataFile(FileHandler.ColorFileName).ToObject<Dictionary<string, ColorBGRA>>() : new Dictionary<string, ColorBGRA>();
+
+            //var constructorInfo = type.GetConstructor(new Type[] {});
+
+            //_plugin = (IHeroAddon) constructorInfo?.Invoke(new object[] {});
+
+            PluginInstance = (IHeroAddon)System.Activator.CreateInstance(type);
         }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            _pluginInstance.OnDraw();
+            PluginInstance.OnDraw();
         }
 
         private static void Game_OnTick(EventArgs args)
@@ -157,34 +162,34 @@ namespace Simple_Marksmans
 
             foreach (var interruptibleSpell in InterruptibleSpellsFound)
             {
-                _pluginInstance.OnInterruptible(interruptibleSpell.Value, interruptibleSpell.Key);
+                PluginInstance.OnInterruptible(interruptibleSpell.Value, interruptibleSpell.Key);
             }
             
-            _pluginInstance.PermaActive();
+            PluginInstance.PermaActive();
 
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo))
             {
-                _pluginInstance.ComboMode();
+                PluginInstance.ComboMode();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Harass))
             {
-                _pluginInstance.HarassMode();
+                PluginInstance.HarassMode();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.JungleClear))
             {
-                _pluginInstance.JungleClear();
+                PluginInstance.JungleClear();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
             {
-                _pluginInstance.LaneClear();
+                PluginInstance.LaneClear();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
             {
-                _pluginInstance.Flee();
+                PluginInstance.Flee();
             }
             if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LastHit))
             {
-                _pluginInstance.LastHit();
+                PluginInstance.LastHit();
             }
         }
     }

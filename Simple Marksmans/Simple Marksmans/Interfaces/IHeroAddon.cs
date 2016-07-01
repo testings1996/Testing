@@ -34,6 +34,7 @@ namespace Simple_Marksmans.Interfaces
 {
     public interface IHeroAddon
     {
+        void CreateMenu();
         void PermaActive();
         void ComboMode();
         void HarassMode();

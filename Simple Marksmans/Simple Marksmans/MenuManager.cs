@@ -55,6 +55,8 @@ namespace Simple_Marksmans
 
             BuildAntiGapcloserMenu();
             BuildInterrupterMenu();
+
+            InitializeAddon.PluginInstance.CreateMenu();
         }
 
         private static void BuildInterrupterMenu()

@@ -47,12 +47,14 @@ namespace Simple_Marksmans.Plugins.Twitch
         }
         protected override void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
-            throw new NotImplementedException();
         }
 
         protected override void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args)
         {
-            throw new NotImplementedException();
+        }
+
+        protected override void CreateMenu()
+        {
         }
 
         protected override void PermaActive()

@@ -34,6 +34,11 @@ namespace Simple_Marksmans
 {
     internal abstract class ChampionPlugin : IHeroAddon
     {
+        void IHeroAddon.CreateMenu()
+        {
+            CreateMenu();
+        }
+
         void IHeroAddon.ComboMode()
         {
             ComboMode();
@@ -83,7 +88,8 @@ namespace Simple_Marksmans
         {
             LastHit();
         }
-        
+
+        protected abstract void CreateMenu();
         protected abstract void ComboMode();
         protected abstract void OnGapcloser(AIHeroClient sender, GapCloserEventArgs args);
         protected abstract void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args);

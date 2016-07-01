@@ -26,8 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
+
+using System.Collections.Generic;
 using EloBuddy;
 using EloBuddy.SDK;
+using SharpDX;
 using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans
@@ -35,6 +38,8 @@ namespace Simple_Marksmans
     internal class Bootstrap
     {
         public static bool MenuLoaded { get; set; }
+
+        public static Dictionary<string, ColorBGRA> SavedColorPickerData { get; set; }
 
         public static void Initialize()
         {

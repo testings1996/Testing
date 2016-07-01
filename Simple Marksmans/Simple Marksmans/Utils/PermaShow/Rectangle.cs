@@ -21,7 +21,6 @@ namespace Simple_Marksmans.Utils.PermaShow
 
             _rectangle = new Line(Device) {Width = width > 0 ? width : 1};
 
-
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
         }

@@ -54,6 +54,12 @@ namespace Simple_Marksmans.Plugins.KogMaw
         {
             throw new NotImplementedException();
         }
+
+        protected override void CreateMenu()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void PermaActive()
         {
             Modes.PermaActive.Execute();

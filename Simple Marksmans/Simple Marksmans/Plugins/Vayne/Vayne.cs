@@ -30,9 +30,12 @@ using System;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
-using EloBuddy.SDK.Utils;
+using EloBuddy.SDK.Menu;
+using EloBuddy.SDK.Menu.Values;
+using EloBuddy.SDK.Rendering;
+using SharpDX;
 using Simple_Marksmans.Utils;
-using Simple_Marksmans.Utils.PermaShow;
+using Color = System.Drawing.Color;
 
 
 namespace Simple_Marksmans.Plugins.Vayne
@@ -40,12 +43,18 @@ namespace Simple_Marksmans.Plugins.Vayne
     internal class Vayne : ChampionPlugin
     {
         public static Spell.Skillshot Q;
+        public static ColorPicker[] ColorPicker = new ColorPicker[3];
+        public static Menu Menu;
 
         static Vayne()
         {
             Q = new Spell.Skillshot(SpellSlot.Q, 300, SkillShotType.Linear);
 
             Orbwalker.OnPostAttack += Orbwalker_OnPostAttack;
+
+            ColorPicker[0] = new ColorPicker("VayneQ", new ColorBGRA(1, 222, 44, 255));
+            ColorPicker[1] = new ColorPicker("VayneW", new ColorBGRA(2, 222, 44, 255));
+            ColorPicker[2] = new ColorPicker("VayneE", new ColorBGRA(3, 222, 44, 255));
         }
 
         private static void Orbwalker_OnPostAttack(AttackableUnit target, EventArgs args)
@@ -67,7 +76,17 @@ namespace Simple_Marksmans.Plugins.Vayne
 
         protected override void OnDraw()
         {
+            Circle.Draw(ColorPicker[0].Color, 1200, Player.Instance);
+            Circle.Draw(ColorPicker[1].Color, 400, Player.Instance);
+            Circle.Draw(ColorPicker[2].Color, 200, Player.Instance);
+        }
 
+        protected override void CreateMenu()
+        {
+            Menu = MenuManager.Menu.AddSubMenu("Vayne settings");
+            Menu.Add("Open1", new CheckBox("Change Color 1")).OnValueChange += (s, a) => ColorPicker[0].Initialize(Color.Aquamarine);
+            Menu.Add("Open2", new CheckBox("Change Color 2")).OnValueChange += (s, a) => ColorPicker[1].Initialize(Color.Aquamarine);
+            Menu.Add("Open3", new CheckBox("Change Color 3")).OnValueChange += (s, a) => ColorPicker[2].Initialize(Color.Aquamarine);
         }
 
         protected override void PermaActive()

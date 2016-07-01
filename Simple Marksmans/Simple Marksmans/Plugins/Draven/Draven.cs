@@ -56,6 +56,11 @@ namespace Simple_Marksmans.Plugins.Draven
             throw new NotImplementedException();
         }
 
+        protected override void CreateMenu()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void PermaActive()
         {
             Modes.PermaActive.Execute();

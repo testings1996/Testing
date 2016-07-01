@@ -55,6 +55,11 @@ namespace Simple_Marksmans.Plugins.Urgot
             throw new NotImplementedException();
         }
 
+        protected override void CreateMenu()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void PermaActive()
         {
             Modes.PermaActive.Execute();

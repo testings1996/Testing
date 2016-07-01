@@ -60,6 +60,11 @@ namespace Simple_Marksmans.Plugins.Ashe
             Chat.Print(args.Enemies);
         }
 
+        protected override void CreateMenu()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void PermaActive()
         {
             Modes.PermaActive.Execute();
