@@ -32,7 +32,6 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Events;
-using Newtonsoft.Json.Linq;
 using SharpDX;
 using Simple_Marksmans.Interfaces;
 using Simple_Marksmans.Utils;
@@ -64,12 +63,12 @@ namespace Simple_Marksmans
 
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (sender.IsMe)
+            if (sender.IsMe || Player.Instance.IsDead)
                 return;
 
             var enemy = sender as AIHeroClient;
 
-            if (enemy == null)
+            if (enemy == null || !enemy.IsEnemy)
                 return;
 
             var menu = MenuManager.MenuValues;
@@ -139,12 +138,16 @@ namespace Simple_Marksmans
             if (type == null)
                 return;
 
-            Bootstrap.SavedColorPickerData = FileHandler.ReadDataFile(FileHandler.ColorFileName) != null ? FileHandler.ReadDataFile(FileHandler.ColorFileName).ToObject<Dictionary<string, ColorBGRA>>() : new Dictionary<string, ColorBGRA>();
+            Console.WriteLine("[DEBUG] Getting saved colorpicker data");
+            var colorFileContent = FileHandler.ReadDataFile(FileHandler.ColorFileName);
+
+            Bootstrap.SavedColorPickerData = colorFileContent != null ? colorFileContent.ToObject<Dictionary<string, ColorBGRA>>() : new Dictionary<string, ColorBGRA>();
 
             //var constructorInfo = type.GetConstructor(new Type[] {});
 
             //_plugin = (IHeroAddon) constructorInfo?.Invoke(new object[] {});
 
+            Console.WriteLine("[DEBUG] Creating activators instance");
             PluginInstance = (IHeroAddon)System.Activator.CreateInstance(type);
         }
 

@@ -39,7 +39,10 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Flee mode !");
+            if (Settings.Flee.JumpWithQ)
+            {
+                WallJumper.TryToJump();
+            }
         }
     }
 }

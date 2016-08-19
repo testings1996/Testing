@@ -27,6 +27,7 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 
+using System;
 using System.Collections.Generic;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -43,6 +44,8 @@ namespace Simple_Marksmans
 
         public static void Initialize()
         {
+            Console.WriteLine("[DEBUG] Initializing addon");
+
             var pluginInitialized = InitializeAddon.Initialize();
 
             if (!pluginInitialized)
@@ -51,12 +54,15 @@ namespace Simple_Marksmans
             Core.DelayAction(
                 () =>
                 {
+                    Console.WriteLine("[DEBUG] Creating Menu");
                     MenuManager.CreateMenu();
+                    Console.WriteLine("[DEBUG] Creating plugin instance");
                     Activator.Activator.InitializeActivator();
                     MenuLoaded = true;
 
                     Misc.PrintInfoMessage("<b><font color=\"#5ED43D\">" + Player.Instance.ChampionName +
                                           "</font></b> loaded successfully.");
+                    Console.WriteLine("[DEBUG] Marksman AIO  fully loaded");
                 }, 250);
         }
     }

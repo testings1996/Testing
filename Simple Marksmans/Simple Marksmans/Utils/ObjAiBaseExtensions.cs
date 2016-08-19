@@ -32,6 +32,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
 
 namespace Simple_Marksmans.Utils
 {
@@ -43,5 +44,36 @@ namespace Simple_Marksmans.Utils
                    unit.HasBuff("ItemCrystalFlaskJungle") || unit.HasBuff("ItemDarkCrystalFlask") || unit.HasBuff("Health Potion");
         }
 
+        public static bool HasUndyingBuffA(this AIHeroClient target)
+        {
+            if (target.Buffs.Any(b => b.IsValid &&
+                                      (b.Name == "ChronoShift" || b.Name == "FioraW" || b.Name == "TaricR" || b.Name == "BardRStasis" ||
+                                       b.Name == "JudicatorIntervention" || b.Name == "UndyingRage" || (b.Name == "kindredrnodeathbuff" && target.HealthPercent <= 10))))
+            {
+                return true;
+            }
+
+            if (target.ChampionName != "Poppy")
+                return target.IsInvulnerable;
+            
+            return EntityManager.Heroes.Allies.Any(
+                o => !o.IsMe && o.Buffs.Any(b => b.Caster.NetworkId == target.NetworkId && b.IsValid &&
+                                                 b.DisplayName == "PoppyDITarget")) || target.IsInvulnerable;
+        }
+        /*
+        public static float GetDamageReduction(this AIHeroClient target)
+        {
+            return 0f;
+        }
+        */
+        public static bool HasSpellShield(this Obj_AI_Base target)
+        {
+            return target.HasBuffOfType(BuffType.SpellShield) || target.HasBuffOfType(BuffType.SpellImmunity);
+        }
+
+        public static float TotalHealthWithShields(this Obj_AI_Base target, bool includeMagicShields = false)
+        {
+            return target.Health + target.AllShield + target.AttackShield + (includeMagicShields ? target.MagicShield : 0);
+        }
     }
 }

@@ -6,7 +6,6 @@ using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
 using SharpDX;
-using Color = System.Drawing.Color;
 
 namespace Simple_Marksmans.Utils.PermaShow
 {
@@ -24,8 +23,8 @@ namespace Simple_Marksmans.Utils.PermaShow
 
         public Vector2 Position { get; set; }
         
-        //public ColorBGRA BackgroundColor { get; set; } = new ColorBGRA(222, 126, 16, 215);
-        //public ColorBGRA SeparatorColor { get; set; } = new ColorBGRA(16, 29, 29, 255);
+        public ColorBGRA BackgroundColor { get; set; } = new ColorBGRA(14, 19, 20, 215);
+        public ColorBGRA SeparatorColor { get; set; } = new ColorBGRA(16, 29, 29, 255);
         public ColorBGRA EnabledUnderlineColor { get; set; } = new ColorBGRA(173, 255, 47, 255);
         public ColorBGRA DisabledUnderlineColor { get; set; } = new ColorBGRA(255, 0, 0, 255);
         public ColorBGRA TextColor { get; set; } = new ColorBGRA(109, 101, 64, 255);
@@ -59,19 +58,23 @@ namespace Simple_Marksmans.Utils.PermaShow
             }
         }
 
-        public ColorBGRA BackgroundColor => new ColorBGRA((byte)DrawingColors[0].Red, (byte)DrawingColors[0].Green, (byte)DrawingColors[0].Blue, (byte)DrawingColors[0].Alpha);
-        public ColorBGRA SeparatorColor => new ColorBGRA((byte)DrawingColors[1].Red, (byte)DrawingColors[1].Green, (byte)DrawingColors[1].Blue, (byte)DrawingColors[1].Alpha);
-        //public ColorBGRA TextColor => new ColorBGRA(DrawingColors[2].Red, DrawingColors[2].Green, DrawingColors[2].Blue, DrawingColors[2].Alpha);
+        public int Opacity
+        {
+            get { return Menu?["Opacity"]?.Cast<Slider>().CurrentValue ?? 0; }
+            set
+            {
+                if (Menu?["Opacity"] == null)
+                    return;
 
-        public ColorPicker[] DrawingColors;
+                Menu["Opacity"].Cast<Slider>().CurrentValue = value;
+            }
+        }
 
         public PermaShow(string headerName, Vector2 pos)
         {
             _headerText = new Text(headerName, 19, (int)_defaultPosition.X, (int)_defaultPosition.Y, TextColor);
 
             Position = pos;
-
-            DrawingColors = new ColorPicker[5];
 
             Core.DelayAction(() =>
             {
@@ -92,9 +95,7 @@ namespace Simple_Marksmans.Utils.PermaShow
         {
             Menu.Add("Enable", new CheckBox("Enable PermaShow"));
             Menu.Add("Spacing", new Slider("Spacing", 25, 10, 50)).OnValueChange += delegate { UpdatePositions(); };
-
-            DrawingColors[0] = Menu.Add("BackgroundR", new ColorPicker("R", Color.Aquamarine));
-            DrawingColors[1] = Menu.Add("BackgroundRR", new ColorPicker("RR", Color.Aquamarine));
+            Menu.Add("Opacity", new Slider("Opacity", 255, 0, 255)).OnValueChange += delegate { UpdatePositions(); };
 
             UpdatePositions();
         }
@@ -104,20 +105,19 @@ namespace Simple_Marksmans.Utils.PermaShow
             if (!Enabled)
                return;
 
+            // ReSharper disable once SwitchStatementMissingSomeCases
             switch (args.Msg)
             {
-                case (uint)WindowMessages.LeftButtonDown:
+                case (uint) WindowMessages.LeftButtonDown:
                     if (IsPositionOnPermaShow(Game.CursorPos2D))
                         IsMoving = true;
                     break;
-                case (uint)WindowMessages.LeftButtonUp:
+                case (uint) WindowMessages.LeftButtonUp:
                     IsMoving = false;
-                    break;
-                default:
                     break;
             }
         }
-        
+
         private void Game_OnTick(EventArgs args)
         {
             if(!Enabled)
@@ -128,6 +128,39 @@ namespace Simple_Marksmans.Utils.PermaShow
                 Position = Game.CursorPos2D;
                 UpdatePositions();
             }
+            /*
+            foreach (var re in _permaShowItems.Where(x => x.Type == typeof (BoolItemData)))
+            {
+                var item = _menuItems.FirstOrDefault(where => where.ItemName == re.ItemName.Message);
+
+                if (item == null)
+                    return;
+
+                var index =
+                    _permaShowItems.Where(x => x.ItemType == ItemTypes.Bool)
+                        .ToList()
+                        .FindIndex(data => re.ItemName == data.ItemName);
+
+                if ( && re.ItemValue.Message.Contains("Disabled"))
+                {
+                    var textWidth = re.ItemValue.GetTextRectangle().Width;
+                    re.ItemValue.Message = "[ ✓ ] Enabled";
+                    _underlines.ToArray()[index].Color = new ColorBGRA(173, 255, 47, 255);
+                    _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
+                                                                  textWidth +
+                                                                  re.ItemValue.GetTextRectangle().Width;
+                }
+                else if (!menuData[item.MenuItemName] && re.ItemValue.Message.Contains("Enabled"))
+                {
+                    var textWidth = re.ItemValue.GetTextRectangle().Width;
+                    re.ItemValue.Message = "[ X ] Disabled";
+                    _underlines.ToArray()[index].Color = new ColorBGRA(255, 0, 0, 255);
+                    _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
+                                                                  textWidth +
+                                                                  re.ItemValue.GetTextRectangle().Width;
+                }
+
+            }*/
 
             foreach (var re in _permaShowItems.Where(x => x.Type == typeof(MenuItem)))
             {
@@ -137,35 +170,38 @@ namespace Simple_Marksmans.Utils.PermaShow
                     return;
 
                 var menuData = MenuManager.MenuValues;
-                if (re.ItemType == ItemTypes.Bool)
+                // ReSharper disable once SwitchStatementMissingSomeCases
+                switch (re.ItemType)
                 {
+                    case ItemTypes.Bool:
 
-                    var index = _permaShowItems.Where(x=>x.ItemType == ItemTypes.Bool).ToList().FindIndex(data => re.ItemName == data.ItemName);
+                        var index = _permaShowItems.Where(x=>x.ItemType == ItemTypes.Bool).ToList().FindIndex(data => re.ItemName == data.ItemName);
 
-                    if (menuData[item.MenuItemName] && re.ItemValue.Message.Contains("Disabled"))
-                    {
-                        var textWidth = re.ItemValue.GetTextRectangle().Width;
-                        re.ItemValue.Message = "[ ✓ ] Enabled";
-                        _underlines.ToArray()[index].Color = new ColorBGRA(173, 255, 47, 255);
-                        _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
-                                                                     textWidth +
-                                                                     re.ItemValue.GetTextRectangle().Width;
-                    }
-                    else if (!menuData[item.MenuItemName] && re.ItemValue.Message.Contains("Enabled"))
-                    {
-                        var textWidth = re.ItemValue.GetTextRectangle().Width;
-                        re.ItemValue.Message = "[ X ] Disabled";
-                        _underlines.ToArray()[index].Color = new ColorBGRA(255, 0, 0, 255);
-                        _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
-                                                                     textWidth +
-                                                                     re.ItemValue.GetTextRectangle().Width;
-                    }
-                } else if (re.ItemType == ItemTypes.Integer)
-                {
-                    if (menuData[item.MenuItemName, true] != Convert.ToInt32(re.ItemValue.Message.Remove(0, 8)))
-                    {
-                        re.ItemValue.Message = "Value : " + menuData[item.MenuItemName, true];
-                    }
+                        if (menuData[item.MenuItemName] && re.ItemValue.Message.Contains("Disabled"))
+                        {
+                            var textWidth = re.ItemValue.GetTextRectangle().Width;
+                            re.ItemValue.Message = "[ ✓ ] Enabled";
+                            _underlines.ToArray()[index].Color = new ColorBGRA(173, 255, 47, 255);
+                            _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
+                                                                          textWidth +
+                                                                          re.ItemValue.GetTextRectangle().Width;
+                        }
+                        else if (!menuData[item.MenuItemName] && re.ItemValue.Message.Contains("Enabled"))
+                        {
+                            var textWidth = re.ItemValue.GetTextRectangle().Width;
+                            re.ItemValue.Message = "[ X ] Disabled";
+                            _underlines.ToArray()[index].Color = new ColorBGRA(255, 0, 0, 255);
+                            _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
+                                                                          textWidth +
+                                                                          re.ItemValue.GetTextRectangle().Width;
+                        }
+                        break;
+                    case ItemTypes.Integer:
+                        if (menuData[item.MenuItemName, true] != Convert.ToInt32(re.ItemValue.Message.Remove(0, 8)))
+                        {
+                            re.ItemValue.Message = "Value : " + menuData[item.MenuItemName, true];
+                        }
+                        break;
                 }
             }
         }
@@ -212,7 +248,7 @@ namespace Simple_Marksmans.Utils.PermaShow
         
         private void Drawing_OnDraw(EventArgs args)
         {
-            if (!Enabled)
+            if (!Enabled || Opacity == 0)
                 return;
 
             if (Drawing.Direct3DDevice.IsDisposed || CountItems() == 0)// || !Enabled)
@@ -227,19 +263,19 @@ namespace Simple_Marksmans.Utils.PermaShow
                     new Vector2(Position.X + width/2, Position.Y),
                     new Vector2(Position.X + width/2, lastSeparator.Positions[0].Y + 5)
                 },
-                BackgroundColor);
+                new ColorBGRA(BackgroundColor.R, BackgroundColor.G,BackgroundColor.B, (byte)Opacity));
             background.Draw();
-
+            
             _headerText.Font.DrawText(null, _headerText.Message, (int) Position.X + DefaultSpacing, (int) Position.Y,
-                _headerText.Color);
-
+                new ColorBGRA(_headerText.Color.R, _headerText.Color.G, _headerText.Color.B, (byte)Opacity));
+            
             var separator = new Rectangle(3,
                 new[]
                 {
                     new Vector2(Position.X, Position.Y + _headerText.Height*1.15f),
                     new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing*2,
                         Position.Y + _headerText.Height*1.15f)
-                }, SeparatorColor);
+                }, new ColorBGRA(SeparatorColor.R, SeparatorColor.G, SeparatorColor.B, (byte)Opacity));
             separator.Draw();
 
             var straightLine = new Rectangle(2,
@@ -248,25 +284,26 @@ namespace Simple_Marksmans.Utils.PermaShow
                     new Vector2(Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2,
                         Position.Y + _headerText.Height*1.85f),
                     new Vector2(Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2, lastSeparator.Positions[0].Y)
-                }, SeparatorColor);
+                }, new ColorBGRA(SeparatorColor.R, SeparatorColor.G, SeparatorColor.B, (byte)Opacity));
             straightLine.Draw();
 
             foreach (var re in _permaShowItems)
             {
-                re.ItemName.Font.DrawText(null, re.ItemName.Message, re.ItemName.X, re.ItemName.Y, re.ItemName.Color);
+                re.ItemName.Font.DrawText(null, re.ItemName.Message, re.ItemName.X, re.ItemName.Y,
+                    new ColorBGRA(re.ItemName.Color.R, re.ItemName.Color.G, re.ItemName.Color.B, (byte) Opacity));
                 re.ItemValue.Font.DrawText(null, re.ItemValue.Message, re.ItemValue.X, re.ItemValue.Y,
-                    re.ItemValue.Color);
+                    new ColorBGRA(re.ItemValue.Color.R, re.ItemValue.Color.G, re.ItemValue.Color.B, (byte) Opacity));
             }
 
-            foreach (var sep in _separators)
+            foreach (var rectangle in _separators.Select(sep => new Rectangle((int) sep.Width, sep.Positions,
+                new ColorBGRA(sep.Color.R, sep.Color.G, sep.Color.B, (byte) Opacity))))
             {
-                var rectangle = new Rectangle((int) sep.Width, sep.Positions, sep.Color);
                 rectangle.Draw();
             }
 
-            foreach (var underline in _underlines)
+            foreach (var rectangle in _underlines.Select(underline => new Rectangle((int) underline.Width, underline.Positions,
+                new ColorBGRA(underline.Color.R, underline.Color.G, underline.Color.B, (byte) Opacity))))
             {
-                var rectangle = new Rectangle((int) underline.Width, underline.Positions, underline.Color);
                 rectangle.Draw();
             }
         }
@@ -335,7 +372,7 @@ namespace Simple_Marksmans.Utils.PermaShow
             return _permaShowItems.Count;
         }
 
-        public void AddItem<T>(string text, T value) where T : IPermaShowItem
+        public T AddItem<T>(string text, T value) where T : IPermaShowItem
         {
             if (_permaShowItems.FirstOrDefault() == null)
             {
@@ -343,134 +380,63 @@ namespace Simple_Marksmans.Utils.PermaShow
                 {
                     var data = value as BoolItemData;
 
-                    if (string.IsNullOrEmpty(data?.ItemName) || data.TextHeight < 1)
-                        return;
-
-                    _separators.Add(new SeparatorData
+                    if (!string.IsNullOrEmpty(data?.ItemName) && data.TextHeight > 1)
                     {
-                        Color = new ColorBGRA(16, 29, 29, 255),
-                        Positions = new[] {new Vector2(200, 130), new Vector2(500, 130)},
-                        Width = 2
-                    });
+                        _separators.Add(new SeparatorData
+                        {
+                            Color = new ColorBGRA(16, 29, 29, 255),
+                            Positions = new[] {new Vector2(200, 130), new Vector2(500, 130)},
+                            Width = 2
+                        });
 
-                    var itemValue = new Text(data.Value ? "[ ✓ ] Enabled" : "[ X ] Disabled", data.TextHeight, 350, 135,
-                        new ColorBGRA(109, 101, 64, 255));
+                        var itemValue = new Text(data.Value ? "[ ✓ ] Enabled" : "[ X ] Disabled", data.TextHeight, 350,
+                            135,
+                            new ColorBGRA(109, 101, 64, 255));
 
-                    _permaShowItems.Add(new ItemData
-                    {
-                        ItemType = ItemTypes.Bool,
-                        ItemName = new Text(data.ItemName, data.TextHeight, 215, 135, new ColorBGRA(109, 101, 64, 255)),
-                        ItemValue = itemValue,
-                        Type = typeof (BoolItemData)
-                    });
+                        _permaShowItems.Add(new ItemData
+                        {
+                            ItemType = ItemTypes.Bool,
+                            ItemName =
+                                new Text(data.ItemName, data.TextHeight, 215, 135, new ColorBGRA(109, 101, 64, 255)),
+                            ItemValue = itemValue,
+                            Type = typeof (BoolItemData)
+                        });
 
-                    _underlines.Add(new SeparatorData
-                    {
-                        Color = data.Value ? new ColorBGRA(173, 255, 47, 255) : new ColorBGRA(255, 0, 0, 255),
-                        Positions =
-                            new[] {new Vector2(376, 150), new Vector2(350 + itemValue.GetTextRectangle().Width, 150)},
-                        Width = 1
-                    });
+                        _underlines.Add(new SeparatorData
+                        {
+                            Color = data.Value ? new ColorBGRA(173, 255, 47, 255) : new ColorBGRA(255, 0, 0, 255),
+                            Positions =
+                                new[]
+                                {new Vector2(376, 150), new Vector2(350 + itemValue.GetTextRectangle().Width, 150)},
+                            Width = 1
+                        });
 
-                    _separators.Add(new SeparatorData
-                    {
-                        Color = new ColorBGRA(16, 29, 29, 255),
-                        Positions = new[] {new Vector2(200, 155), new Vector2(500, 155)},
-                        Width = 2
-                    });
+                        _separators.Add(new SeparatorData
+                        {
+                            Color = new ColorBGRA(16, 29, 29, 255),
+                            Positions = new[] {new Vector2(200, 155), new Vector2(500, 155)},
+                            Width = 2
+                        });
+                        var xd = new BoolItemData(data.ItemName, data.Value, data.TextHeight);
+                        xd.OnValueChangeEvent += Xd_OnValueChangeEvent;
+                        return (T)Convert.ChangeType(xd, typeof(BoolItemData));
+                    }
                 }
                 if (value.GetType() == typeof (MenuItem))
                 {
                     var data = value as MenuItem;
 
-                    if (string.IsNullOrEmpty(data?.ItemName) || data.TextHeight < 1)
-                        return;
-
-                    var menu = MenuManager.MenuValues;
-
-                    var itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
-                        (int) (Position.Y + _headerText.Height*2f), TextColor);
-                    var itemValue = new Text(menu[data.MenuItemName] ? "[ ✓ ] Enabled" : "[ X ] Disabled",
-                        data.TextHeight, (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
-                        (int) (Position.Y + _headerText.Height*2f),
-                        TextColor);
-
-                    _permaShowItems.Add(new ItemData
+                    if (!string.IsNullOrEmpty(data?.ItemName) && data.TextHeight > 1)
                     {
-                        ItemType = ItemTypes.Bool,
-                        ItemName = itemName,
-                        ItemValue = itemValue,
-                        Type = typeof (MenuItem)
-                    });
 
-                    _menuItems.Add(new MenuItem(data.ItemName, data.MenuItemName, data.ItemType, data.TextHeight));
+                        var menu = MenuManager.MenuValues;
 
-                    _separators.Add(new SeparatorData
-                    {
-                        Color = SeparatorColor,
-                        Positions =
-                            new[]
-                            {
-                                new Vector2(Position.X, Position.Y + _headerText.Height*1.85f),
-                                new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
-                                    Position.Y + _headerText.Height*1.85f)
-                            },
-                        Width = 2
-                    });
-
-                    _underlines.Add(new SeparatorData
-                    {
-                        Color = menu[data.MenuItemName] ? EnabledUnderlineColor : DisabledUnderlineColor,
-                        Positions =
-                            new[]
-                            {
-                                new Vector2(
-                                    (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f), 
-                                    Position.Y + _headerText.Height*2f + data.TextHeight),
-                                new Vector2(
-                                    (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f) +
-                                    itemValue.GetTextRectangle().Width + 27,
-                                    Position.Y + _headerText.Height*2f + data.TextHeight)
-                            },
-                        Width = 1
-                    });
-
-                    _separators.Add(new SeparatorData
-                    {
-                        Color = SeparatorColor,
-                        Positions =
-                            new[]
-                            {
-                                new Vector2(Position.X, Position.Y + _headerText.Height*2f + data.TextHeight + 5),
-                                new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
-                                    Position.Y + _headerText.Height*2f + data.TextHeight + 5)
-                            },
-                        Width = 2
-                    });
-                }
-            }
-            else
-            {
-                if (value.GetType() == typeof (MenuItem))
-                {
-                    var data = value as MenuItem;
-                    
-                    if (string.IsNullOrEmpty(data?.ItemName) || data.TextHeight < 1)
-                        return;
-
-                    var menu = MenuManager.MenuValues;
-                    var lastItem = _permaShowItems.Last();
-                    Text itemName;
-                    Text itemValue;
-                    
-                    if (data.ItemType == ItemTypes.Bool)
-                    {
-                        itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
-                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
-                        itemValue = new Text(menu[data.MenuItemName] ? "[ ✓ ] Enabled" : "[ X ] Disabled",
+                        var itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
+                            (int) (Position.Y + _headerText.Height*2f), TextColor);
+                        var itemValue = new Text(menu[data.MenuItemName] ? "[ ✓ ] Enabled" : "[ X ] Disabled",
                             data.TextHeight,
                             (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
-                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
+                            (int) (Position.Y + _headerText.Height*2f),
                             TextColor);
 
                         _permaShowItems.Add(new ItemData
@@ -483,157 +449,278 @@ namespace Simple_Marksmans.Utils.PermaShow
 
                         _menuItems.Add(new MenuItem(data.ItemName, data.MenuItemName, data.ItemType, data.TextHeight));
 
+                        _separators.Add(new SeparatorData
+                        {
+                            Color = SeparatorColor,
+                            Positions =
+                                new[]
+                                {
+                                    new Vector2(Position.X, Position.Y + _headerText.Height*1.85f),
+                                    new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
+                                        Position.Y + _headerText.Height*1.85f)
+                                },
+                            Width = 2
+                        });
+
                         _underlines.Add(new SeparatorData
                         {
                             Color = menu[data.MenuItemName] ? EnabledUnderlineColor : DisabledUnderlineColor,
                             Positions =
                                 new[]
                                 {
-                                new Vector2(
-                                    (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f),
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight),
-                                new Vector2(
-                                    (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f) +
-                                    itemValue.GetTextRectangle().Width,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight)
+                                    new Vector2(
+                                        (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f),
+                                        Position.Y + _headerText.Height*2f + data.TextHeight),
+                                    new Vector2(
+                                        (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f) +
+                                        itemValue.GetTextRectangle().Width + 27,
+                                        Position.Y + _headerText.Height*2f + data.TextHeight)
                                 },
                             Width = 1
                         });
 
-                    } else if (data.ItemType == ItemTypes.Integer)
-                    {
-                        itemName = new Text(data.ItemName, data.TextHeight, (int)Position.X + DefaultSpacing,
-                            (int)(lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
-                        itemValue = new Text("Value : " + menu[data.MenuItemName, true],
-                            data.TextHeight,
-                            (int)(Position.X + itemName.GetTextRectangle().Width + DefaultSpacing * 2.5f),
-                            (int)(lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
-                            TextColor);
-
-                        _permaShowItems.Add(new ItemData
+                        _separators.Add(new SeparatorData
                         {
-                            ItemType = ItemTypes.Integer,
-                            ItemName = itemName,
-                            ItemValue = itemValue,
-                            Type = typeof(MenuItem)
+                            Color = SeparatorColor,
+                            Positions =
+                                new[]
+                                {
+                                    new Vector2(Position.X, Position.Y + _headerText.Height*2f + data.TextHeight + 5),
+                                    new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
+                                        Position.Y + _headerText.Height*2f + data.TextHeight + 5)
+                                },
+                            Width = 2
                         });
-
-                        _menuItems.Add(new MenuItem(data.ItemName, data.MenuItemName, data.ItemType, data.TextHeight));
+                        return (T)Convert.ChangeType(this, typeof(MenuItem));
                     }
+                }
+            }
+            else
+            {
+                if (value.GetType() == typeof (MenuItem))
+                {
+                    var data = value as MenuItem;
 
-                    _separators.Add(new SeparatorData
+                    if (!string.IsNullOrEmpty(data?.ItemName) && data.TextHeight > 1)
                     {
-                        Color = SeparatorColor,
-                        Positions =
-                            new[]
+                        var menu = MenuManager.MenuValues;
+                        var lastItem = _permaShowItems.Last();
+                        Text itemName;
+                        Text itemValue;
+
+                        if (data.ItemType == ItemTypes.Bool)
+                        {
+                            itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
+                                (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
+                            itemValue = new Text(menu[data.MenuItemName] ? "[ ✓ ] Enabled" : "[ X ] Disabled",
+                                data.TextHeight,
+                                (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
+                                (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
+                                TextColor);
+
+                            _permaShowItems.Add(new ItemData
                             {
-                                new Vector2(Position.X,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight + 5),
-                                new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight + 5)
-                            },
-                        Width = 2
-                    });
+                                ItemType = ItemTypes.Bool,
+                                ItemName = itemName,
+                                ItemValue = itemValue,
+                                Type = typeof (MenuItem)
+                            });
+
+                            _menuItems.Add(new MenuItem(data.ItemName, data.MenuItemName, data.ItemType, data.TextHeight));
+
+                            _underlines.Add(new SeparatorData
+                            {
+                                Color = menu[data.MenuItemName] ? EnabledUnderlineColor : DisabledUnderlineColor,
+                                Positions =
+                                    new[]
+                                    {
+                                        new Vector2(
+                                            (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f),
+                                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) +
+                                            data.TextHeight),
+                                        new Vector2(
+                                            (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f) +
+                                            itemValue.GetTextRectangle().Width,
+                                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) +
+                                            data.TextHeight)
+                                    },
+                                Width = 1
+                            });
+
+                        }
+                        else if (data.ItemType == ItemTypes.Integer)
+                        {
+                            itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
+                                (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
+                            itemValue = new Text("Value : " + menu[data.MenuItemName, true],
+                                data.TextHeight,
+                                (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
+                                (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
+                                TextColor);
+
+                            _permaShowItems.Add(new ItemData
+                            {
+                                ItemType = ItemTypes.Integer,
+                                ItemName = itemName,
+                                ItemValue = itemValue,
+                                Type = typeof (MenuItem)
+                            });
+
+                            _menuItems.Add(new MenuItem(data.ItemName, data.MenuItemName, data.ItemType, data.TextHeight));
+                        }
+
+                        _separators.Add(new SeparatorData
+                        {
+                            Color = SeparatorColor,
+                            Positions =
+                                new[]
+                                {
+                                    new Vector2(Position.X,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight +
+                                        5),
+                                    new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight +
+                                        5)
+                                },
+                            Width = 2
+                        });
+                        return (T)Convert.ChangeType(this, typeof(MenuItem));
+                    }
                 } else if (value.GetType() == typeof (BoolItemData))
                 {
                     var data = value as BoolItemData;
 
-                    if (string.IsNullOrEmpty(data?.ItemName) || data.TextHeight < 1)
-                        return;
-
-                    var lastItem = _permaShowItems.Last();
-
-                    var itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
-                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
-                    var itemValue = new Text(data.Value ? "[ ✓ ] Enabled" : "[ X ] Disabled",
-                        data.TextHeight,
-                        (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
-                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
-                        TextColor);
-
-                    _permaShowItems.Add(new ItemData
+                    if (!string.IsNullOrEmpty(data?.ItemName) && data.TextHeight > 1)
                     {
-                        ItemType = ItemTypes.Bool,
-                        ItemName = itemName,
-                        ItemValue = itemValue,
-                        Type = typeof (BoolItemData)
-                    });
 
-                    _underlines.Add(new SeparatorData
-                    {
-                        Color = data.Value ? EnabledUnderlineColor : DisabledUnderlineColor,
-                        Positions =
+                        var lastItem = _permaShowItems.Last();
+
+                        var itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
+                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
+                        var itemValue = new Text(data.Value ? "[ ✓ ] Enabled" : "[ X ] Disabled",
+                            data.TextHeight,
+                            (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
+                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
+                            TextColor);
+
+                        _permaShowItems.Add(new ItemData
+                        {
+                            ItemType = ItemTypes.Bool,
+                            ItemName = itemName,
+                            ItemValue = itemValue,
+                            Type = typeof (BoolItemData)
+                        });
+
+                        _underlines.Add(new SeparatorData
+                        {
+                            Color = data.Value ? EnabledUnderlineColor : DisabledUnderlineColor,
+                            Positions =
                                 new[]
                                 {
-                                new Vector2(
-                                    (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f),
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight),
-                                new Vector2(
-                                    (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f) +
-                                    itemValue.GetTextRectangle().Width,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight)
+                                    new Vector2(
+                                        (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f),
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight),
+                                    new Vector2(
+                                        (int) (Position.X + GetMaxItemNameTextLength() + DefaultSpacing*2.5f) +
+                                        itemValue.GetTextRectangle().Width,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight)
                                 },
-                        Width = 1
-                    });
+                            Width = 1
+                        });
 
-                    _separators.Add(new SeparatorData
-                    {
-                        //Color = SeparatorColor,
-                        Positions =
-                            new[]
-                            {
-                                new Vector2(Position.X,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight + 5),
-                                new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight + 5)
-                            },
-                        Width = 2
-                    });
+                        _separators.Add(new SeparatorData
+                        {
+                            Positions =
+                                new[]
+                                {
+                                    new Vector2(Position.X,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight +
+                                        5),
+                                    new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight +
+                                        5)
+                                },
+                            Width = 2
+                        });
+                        return (T)Convert.ChangeType(this, typeof(BoolItemData));
+                    }
                 }
                 else if (value.GetType() == typeof (StringItemData))
                 {
                     var data = value as StringItemData;
 
-                    if (string.IsNullOrEmpty(data?.ItemName) || data.TextHeight < 1)
-                        return;
-
-                    var lastItem = _permaShowItems.Last();
-
-                    var itemName = new Text(data.ItemName, data.TextHeight, (int)Position.X + DefaultSpacing,
-                        (int)(lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
-                    var itemValue = new Text(data.Value,
-                        data.TextHeight,
-                        (int)(Position.X + itemName.GetTextRectangle().Width + DefaultSpacing * 2.5f),
-                        (int)(lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
-                        TextColor);
-
-                    _permaShowItems.Add(new ItemData
+                    if (!string.IsNullOrEmpty(data?.ItemName) && data.TextHeight > 1)
                     {
-                        ItemType = ItemTypes.String,
-                        ItemName = itemName,
-                        ItemValue = itemValue,
-                        Type = typeof(BoolItemData)
-                    });
+                        var lastItem = _permaShowItems.Last();
 
-                    _separators.Add(new SeparatorData
-                    {
-                        Color = SeparatorColor,
-                        Positions =
-                            new[]
-                            {
-                                new Vector2(Position.X,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight + 5),
-                                new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
-                                    (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight + 5)
-                            },
-                        Width = 2
-                    });
+                        var itemName = new Text(data.ItemName, data.TextHeight, (int) Position.X + DefaultSpacing,
+                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10), TextColor);
+                        var itemValue = new Text(data.Value,
+                            data.TextHeight,
+                            (int) (Position.X + itemName.GetTextRectangle().Width + DefaultSpacing*2.5f),
+                            (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10),
+                            TextColor);
+
+                        _permaShowItems.Add(new ItemData
+                        {
+                            ItemType = ItemTypes.String,
+                            ItemName = itemName,
+                            ItemValue = itemValue,
+                            Type = typeof (BoolItemData)
+                        });
+
+                        _separators.Add(new SeparatorData
+                        {
+                            Color = SeparatorColor,
+                            Positions =
+                                new[]
+                                {
+                                    new Vector2(Position.X,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight +
+                                        5),
+                                    new Vector2(Position.X + GetMaxTextLength() + DefaultSpacing,
+                                        (int) (lastItem.ItemName.Y + lastItem.ItemName.Height + 10) + data.TextHeight +
+                                        5)
+                                },
+                            Width = 2
+                        });
+                        return (T)Convert.ChangeType(this, typeof(BoolItemData));
+                    }
                 }
             }
-
             UpdatePositions();
+            return  (T)(object)null;
         }
-        
+
+        private void Xd_OnValueChangeEvent(object sender, ChangeValueEventArgs args)
+        {
+            var item = _permaShowItems.FirstOrDefault(e => e.ItemName.Message == args.ItemName);
+
+            if (item == null)
+                return;
+
+            var index = _permaShowItems.Where(x => x.ItemType == ItemTypes.Bool).ToList().FindIndex(data => item.ItemName == data.ItemName);
+
+            if (args.Value && item.ItemValue.Message.Contains("Disabled"))
+            {
+                var textWidth = item.ItemValue.GetTextRectangle().Width;
+                item.ItemValue.Message = "[ ✓ ] Enabled";
+                _underlines.ToArray()[index].Color = new ColorBGRA(173, 255, 47, 255);
+                _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
+                                                              textWidth +
+                                                              item.ItemValue.GetTextRectangle().Width;
+            }
+            else if (!args.Value && item.ItemValue.Message.Contains("Enabled"))
+            {
+                var textWidth = item.ItemValue.GetTextRectangle().Width;
+                item.ItemValue.Message = "[ X ] Disabled";
+                _underlines.ToArray()[index].Color = new ColorBGRA(255, 0, 0, 255);
+                _underlines.ToArray()[index].Positions[1].X = _underlines.ToArray()[index].Positions[1].X -
+                                                              textWidth +
+                                                              item.ItemValue.GetTextRectangle().Width;
+            }
+        }
+
         private bool IsPositionOnPermaShow(Vector2 position)
         {
             if (!Enabled)
@@ -684,8 +771,25 @@ namespace Simple_Marksmans.Utils.PermaShow
     internal class BoolItemData : IPermaShowItem
     {
         public string ItemName { get; set; }
-        public bool Value { get; set; }
+
+        private bool _value;
+        public bool Value
+        {
+            get { return _value; }
+            set
+            {
+                if (_value != value)
+                {
+                    OnValueChangeEvent?.Invoke(this, new ChangeValueEventArgs {ItemName = ItemName, Value = value});
+                }
+                _value = value;
+            }
+        }
+
         public uint TextHeight { get; set; }
+
+        public delegate void OnValueChange(object sender, ChangeValueEventArgs args);
+        public event OnValueChange OnValueChangeEvent;
 
         public BoolItemData(string itemName, bool value, uint textHeight)
         {
@@ -693,6 +797,12 @@ namespace Simple_Marksmans.Utils.PermaShow
             Value = value;
             TextHeight = textHeight;
         }
+    }
+
+    internal class ChangeValueEventArgs : EventArgs
+    {
+        public string ItemName { get; set; }
+        public bool Value { get; set; }
     }
 
     internal class StringItemData: IPermaShowItem

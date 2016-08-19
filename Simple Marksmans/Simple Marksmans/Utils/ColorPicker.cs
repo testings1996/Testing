@@ -5,7 +5,7 @@ using System.Threading;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Rendering;
-using SharpDX;
+using SharpDX; 
 using Color = System.Drawing.Color;
 using Rectangle = Simple_Marksmans.Utils.PermaShow.Rectangle;
 using Text = Simple_Marksmans.Utils.PermaShow.Text;
@@ -23,8 +23,11 @@ namespace Simple_Marksmans.Utils
         private bool _isMoving;
         private readonly string _uniqueId;
         private bool _posUpdated;
-        
 
+        internal delegate void OnColorChangeEvent(object sender, OnColorChangeArgs args);
+
+        public event OnColorChangeEvent OnColorChange;
+        
         public ColorBGRA Color { get; set; }
         public Vector2[] Position { get; set; } = {new Vector2(500, 200), new Vector2(500, 450)};
         public int Width { get; set; } = 200;
@@ -32,6 +35,8 @@ namespace Simple_Marksmans.Utils
         public ColorPicker(string uniqueId, ColorBGRA defaultColor)
         {
             _uniqueId = uniqueId;
+
+            Console.WriteLine("[DEBUG] Constructing ColorPicker !");
 
             Color = Bootstrap.SavedColorPickerData.ContainsKey(uniqueId) ? Bootstrap.SavedColorPickerData[uniqueId] : defaultColor;
         }
@@ -83,6 +88,8 @@ namespace Simple_Marksmans.Utils
                 Color = new ColorBGRA((byte) _slider1.Value, (byte) _slider2.Value, (byte) _slider3.Value, 255);
 
                 FileHandler.WriteToDataFile(_uniqueId, new ColorBGRA((byte)_slider1.Value, (byte)_slider2.Value, (byte)_slider3.Value, 255));
+
+                OnColorChange?.Invoke(this, new OnColorChangeArgs(Color));
 
                 Unload();
             }
@@ -271,7 +278,7 @@ namespace Simple_Marksmans.Utils
                 double increase = 0;
                 while (Math.Abs(var3 - value) > 0)
                 {
-                    increase += 0.05;
+                    increase += 0.25;
 
                     var2 = (Positions[0].X - (position + increase))/(Positions[0].X - Positions[1].X);
                     var3 =
@@ -343,6 +350,16 @@ namespace Simple_Marksmans.Utils
                         ((MaxValue - MinValue)*(Math.Pow(Math.E, value) - Math.Pow(Math.E, -value))/
                          (Math.Pow(Math.E, 1.0f) - Math.Pow(Math.E, -1.0f)) + MinValue);
             }
+        }
+    }
+
+    internal class OnColorChangeArgs
+    {
+        public ColorBGRA Color { get; set; }
+
+        public OnColorChangeArgs(ColorBGRA color)
+        {
+            Color = color;
         }
     }
 }

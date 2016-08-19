@@ -29,9 +29,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using EloBuddy.SDK.Events;
 
 namespace Simple_Marksmans.Plugins.Kalista.Modes
 {
@@ -39,7 +39,73 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
     {
         public static void Execute()
         {
-            Chat.Print("JungleClear mode !");
+            if (Q.IsReady() && Settings.JungleLaneClear.UseQ && !Player.Instance.IsDashing() && Player.Instance.ManaPercent >= Settings.JungleLaneClear.MinManaForQ)
+            {
+                var minions =
+                    EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, Q.Range).Where(
+                        x => x.Health < Player.Instance.GetSpellDamage(x, SpellSlot.Q)).ToList();
+
+                if (!minions.Any())
+                    return;
+
+                foreach (var minion in minions)
+                {
+                    var qPrediction = Q.GetPrediction(minion);
+                    var collisionableObjects =
+                        qPrediction.GetCollisionObjects<Obj_AI_Base>()
+                            .Where(x => x.Health < Player.Instance.GetSpellDamage(x, SpellSlot.Q))
+                            .ToList();
+
+                    foreach (var minionC in collisionableObjects)
+                    {
+                        if (minionC == null)
+                            continue;
+
+                        var id = collisionableObjects.FindIndex(x => x == minionC);
+                        var collisionObjects = new List<Obj_AI_Base> { minionC };
+
+                        for (var i = id; i < collisionableObjects.Count - 1; i++)
+                        {
+                            if (!(collisionableObjects[id].Health <=
+                                  Player.Instance.GetSpellDamage(collisionableObjects[id], SpellSlot.Q))) continue;
+
+                            collisionObjects.Add(collisionableObjects[id]);
+                            id++;
+                        }
+
+                        var rectangleP = new Geometry.Polygon.Rectangle(Player.Instance.Position,
+                            collisionableObjects[id].Position, 70);
+
+                        var list =
+                            EntityManager.MinionsAndMonsters.EnemyMinions.Where(
+                                x =>
+                                    x.IsValidTarget(1500) &&
+                                    new Geometry.Polygon.Circle(x.Position, x.BoundingRadius).Points.Any(
+                                        xx => rectangleP.IsInside(xx)))
+                                .Where(xd => xd.Health <= Player.Instance.GetSpellDamage(xd, SpellSlot.Q))
+                                .ToList();
+
+                        if (list.Count < 2)
+                            continue;
+
+                        var interectionPoint = rectangleP.Points[0].Intersection(rectangleP.Points[2],
+                            rectangleP.Points[1], rectangleP.Points[3]);
+
+                        Q.Cast(interectionPoint.Point.To3D());
+                    }
+                }
+            }
+
+            if (E.IsReady() && Settings.JungleLaneClear.UseE &&
+                Player.Instance.ManaPercent >= Settings.JungleLaneClear.MinManaForE)
+            {
+                var minions = EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, E.Range).Where(unit => unit.IsTargetKillableByRend());
+
+                if (minions.Count() >= Settings.JungleLaneClear.MinMinionsForE)
+                {
+                    E.Cast();
+                }
+            }
         }
     }
 }

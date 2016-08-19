@@ -32,6 +32,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Kalista.Modes
 {
@@ -39,6 +41,50 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
     {
         public static void Execute()
         {
+            Orbwalker.ForcedTarget = null;
+
+            var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
+
+            if (target != null && !target.IsDead && Q.IsReady() && Settings.Combo.UseQ && !target.HasSpellShield() &&
+                !target.HasUndyingBuffA() && Player.Instance.GetSpellDamage(target, SpellSlot.Q) >= target.TotalHealthWithShields())
+            {
+                Q.Cast(Q.GetPrediction(target).CastPosition);
+                Console.WriteLine("[DEBUG] Casting Q to ks");
+            }
+            if (E.IsReady() && Settings.Combo.UseE)
+            {
+                if(EntityManager.Heroes.Enemies.Any(unit => unit.IsValid && !unit.IsDead && unit.IsValidTarget(E.Range) && unit.IsTargetKillableByRend()))
+                {
+                    E.Cast();
+                    Console.WriteLine("[DEBUG] Casting E to ks");
+                }
+            }
+
+            if (E.IsReady() && (Settings.JungleLaneClear.UseEToStealBuffs || Settings.JungleLaneClear.UseEToStealDragon))
+            {
+                if (Settings.JungleLaneClear.UseEToStealDragon)
+                {
+                    if(EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, E.Range).Any(unit => (unit.BaseSkinName.Contains("Baron") || unit.BaseSkinName.Contains("Dragon") || unit.BaseSkinName.Contains("RiftHerald")) && unit.IsTargetKillableByRend()))
+                    {
+                        Console.WriteLine("[DEBUG] Casting E to ks baron");
+                        E.Cast();
+                    }
+                }
+
+                if (Settings.JungleLaneClear.UseEToStealBuffs)
+                {
+                    if (EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, E.Range).Any(unit => unit.IsValidTarget(E.Range) && (unit.BaseSkinName.Contains("Blue") || unit.BaseSkinName.Contains("Red")) && unit.IsTargetKillableByRend()))
+                    {
+                        Console.WriteLine("[DEBUG] Casting E to ks blue ["+Game.Time+"]");
+                        E.Cast();
+                    }
+                }
+            }
+
+            if (IncomingDamage.GetIncomingDamage(Player.Instance) > 0f)
+            {
+                Console.WriteLine("[DEBUG] Incoming damage : "+ IncomingDamage.GetIncomingDamage(Player.Instance));
+            }
         }
     }
 }

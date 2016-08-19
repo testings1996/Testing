@@ -93,11 +93,6 @@ namespace Simple_Marksmans.Activator
             ActivatorMenu = MainMenu.AddMenu("Marksman AIO : Activator", "MarksmanAIOActivator");
             ActivatorMenu.AddGroupLabel("Activator settings : ");
             ActivatorMenu.Add("Activator.Enable", new CheckBox("Enable activator"));
-            ActivatorMenu.Add("Activator.xD1", new Slider("1", 222, -100, 1900));
-            ActivatorMenu.Add("Activator.xD2", new Slider("X", 350, 0, 1900));
-            ActivatorMenu.Add("Activator.xD22", new Slider("X2", 350, 190, 550));
-            ActivatorMenu.Add("Activator.xD3", new Slider("Y", 350, 50, 550));
-            ActivatorMenu.Add("Activator.xD4", new Slider("Y2", 350, 50, 550));
             ScanForItems();
             InitializeMenu();
 

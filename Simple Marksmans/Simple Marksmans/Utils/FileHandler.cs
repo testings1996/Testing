@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using EloBuddy;
 using EloBuddy.Sandbox;
 using EloBuddy.SDK.Utils;
 using Newtonsoft.Json;
@@ -21,10 +23,12 @@ namespace Simple_Marksmans.Utils
             if (File.Exists(filePath) == false)
             {
                 Logger.Error("File not found: " + filePath);
+                Console.WriteLine("[DEBUG]  File not found");
                 return null;
             }
             try
             {
+                Console.WriteLine("[DEBUG] Starting new task");
                 return Task.Factory.StartNew(() => ReadJsonFile(filePath)).Result;
             }
             catch (Exception e)
@@ -36,29 +40,49 @@ namespace Simple_Marksmans.Utils
 
         private static JToken ReadJsonFile(string path)
         {
+            Console.WriteLine("[DEBUG] ReadJsonFile start");
             JToken token;
 
             using (var streamReader = new StreamReader(path))
             {
+                Console.WriteLine("[DEBUG] StreamReader start");
                 var file = new JsonTextReader(streamReader);
-                token = JToken.ReadFrom(file);
-            }
+                Console.WriteLine("[DEBUG] saving token");
 
+                token = GetFileLinesNumber(path) != 0 ? JToken.ReadFrom(file) : null;
+                //foreach (var xd in token.First)
+                //{
+                //    Console.WriteLine("[DEBUG] " + xd);
+                //}
+            }
+            Console.WriteLine("[DEBUG] returning token");
             return token;
         }
 
         public static void WriteToDataFile(string uniqueId, ColorBGRA color)
         {
+            Console.WriteLine("[DEBUG] WriteToDataFile start");
             var filePath = Path.Combine(SandboxConfig.DataDirectory, Path.Combine("Marksman AIO", ColorFileName));
 
-            if (File.Exists(filePath) == false)
+            //Check if directory is created
+            if (!Directory.Exists(Path.Combine(SandboxConfig.DataDirectory, "Marksman AIO")))
             {
-                File.Create(Path.Combine(SandboxConfig.DataDirectory, Path.Combine("Marksman AIO", ColorFileName)));
+                Console.WriteLine("[DEBUG] Directory doesnt exist. Creating Marksman AIO folder");
+                Directory.CreateDirectory(Path.Combine(SandboxConfig.DataDirectory, "Marksman AIO"));
             }
-            else
+
+            if (!File.Exists(filePath))
+            {
+                using (var file = File.Create(Path.Combine(SandboxConfig.DataDirectory, Path.Combine("Marksman AIO", ColorFileName))))
+                {
+                    file.Flush();
+                }
+            }
+            
             {
                 try
                 {
+                    Console.WriteLine("[DEBUG] WriteToDataFile try sequence");
                     var file = ReadDataFile(ColorFileName);
 
                     Dictionary<string, ColorBGRA> dictionary;
@@ -66,28 +90,35 @@ namespace Simple_Marksmans.Utils
                     //Empty file
                     if (file == null)
                     {
+                        Console.WriteLine("[DEBUG] Empty file");
                         dictionary = new Dictionary<string, ColorBGRA> {{uniqueId, color}};
                     }
                     else
                     {
+                        Console.WriteLine("[DEBUG] file not empty");
                         dictionary = file.ToObject<Dictionary<string, ColorBGRA>>();
 
                         if (dictionary.ContainsKey(uniqueId))
                         {
+                            Console.WriteLine("[DEBUG] dic contains key");
                             dictionary[uniqueId] = color;
                         }
                         else
                         {
+                            Console.WriteLine("[DEBUG]  dic does not contain a key");
                             dictionary.Add(uniqueId, color);
                         }
                     }
-
+                    Console.WriteLine("[DEBUG] File.Open");
                     var fileStream = File.Open(filePath, FileMode.Open);
+                    Console.WriteLine("[DEBUG] StreamWriter start");
                     var streamWriter = new StreamWriter(fileStream);
 
                     using (JsonWriter jsonWriter = new JsonTextWriter(streamWriter))
                     {
+                        Console.WriteLine("[DEBUG] JsonTextWriter start");
                         jsonWriter.Formatting = Formatting.Indented;
+                        Console.WriteLine("[DEBUG] JsonSerializer");
                         new JsonSerializer().Serialize(jsonWriter, dictionary);
                     }
                 }
@@ -95,6 +126,19 @@ namespace Simple_Marksmans.Utils
                 {
                     Logger.Error(ex.Message);
                 }
+            }
+        }
+
+        public static int GetFileLinesNumber(string filePath)
+        {
+            using (var streamReader = new StreamReader(filePath))
+            {
+                var linesNumber = 0;
+                while (streamReader.ReadLine() != null)
+                {
+                    linesNumber++;
+                }
+                return linesNumber;
             }
         }
     }

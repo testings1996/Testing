@@ -26,12 +26,12 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
+
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using EloBuddy.SDK.Events;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Kalista.Modes
 {
@@ -39,7 +39,45 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Harass mode !");
+            if (Q.IsReady() && Settings.Harass.UseQ && !Player.Instance.IsDashing() &&
+                Player.Instance.ManaPercent >= Settings.Harass.MinManaForQ)
+            {
+                var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
+
+                if (target != null)
+                {
+                    if (!target.HasSpellShield() && !target.HasUndyingBuffA())
+                    {
+                        var pred = Q.GetPrediction(target);
+                        if (pred.HitChancePercent > 85 && pred.CollisionObjects.Length == 0)
+                        {
+                            Q.Cast(pred.CastPosition);
+                        }
+                    }
+                }
+            }
+
+            if (!E.IsReady() || !Settings.Harass.UseE || !(Player.Instance.ManaPercent >= Settings.Harass.MinManaForE))
+                return;
+
+            var enemy =
+                EntityManager.Heroes.Enemies.FirstOrDefault(x => x.IsValidTarget(E.Range) && x.HasRendBuff() &&
+                                                                 x.GetRendBuff().Count > Settings.Harass.MinStacksForE);
+
+            if (enemy == null)
+                return;
+
+
+            if (Settings.Harass.UseEIfManaWillBeRestored &&
+                EntityManager.MinionsAndMonsters.CombinedAttackable.Count(
+                    x => x.IsValidTarget(E.Range) && x.IsTargetKillableByRend()) >= 2)
+            {
+                E.Cast();
+            }
+            else
+            {
+                E.Cast();
+            }
         }
     }
 }

@@ -34,7 +34,6 @@ namespace Simple_Marksmans.Plugins.Draven.Modes
     {
         public static void Execute()
         {
-            Chat.Print("LaneClear mode !");
         }
     }
 }

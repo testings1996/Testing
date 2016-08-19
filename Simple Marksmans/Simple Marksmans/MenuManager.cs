@@ -27,7 +27,6 @@
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
 using System.Linq;
-using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Enumerations;
 using EloBuddy.SDK.Events;
@@ -51,15 +50,20 @@ namespace Simple_Marksmans
         public static void CreateMenu()
         {
             Menu = MainMenu.AddMenu("Marksman AIO", "MarksmanAIO");
-            Menu.AddSubMenu("Misc", "Miscc");
+            Menu.AddGroupLabel("Welcome back, Buddy !");
+            Menu.AddSeparator(5);
+            Menu.AddLabel("This addon comes in handy for anyone who wants to have\nall marksmans plugins in just one addon. This AIO comes also with beautiful drawings\nand an activator. I just " +
+                          "hope you will have fun. Good luck !");
+            Menu.AddSeparator(40);
+            Menu.AddLabel("Marksman AIO is currently in early beta phase.\nIf you experienced any bugs please report them in the forum thread.");
 
-            BuildAntiGapcloserMenu();
-            BuildInterrupterMenu();
+            //BuildAntiGapcloserMenu();
+            //BuildInterrupterMenu();
 
             InitializeAddon.PluginInstance.CreateMenu();
         }
 
-        private static void BuildInterrupterMenu()
+        public static void BuildInterrupterMenu()
         {
             if (
                 !EntityManager.Heroes.Enemies.Any(
@@ -103,8 +107,6 @@ namespace Simple_Marksmans
                         case DangerLevel.Low:
                             healthPercent = 50;
                             break;
-                        default:
-                            break;
                     }
 
                     InterrupterMenu.AddLabel("[" + interruptibleSpell.SpellSlot + "] " + interruptibleSpell.SpellName + " | Danger Level : "+ interruptibleSpell.DangerLevel);
@@ -128,7 +130,7 @@ namespace Simple_Marksmans
             }
         }
 
-        private static void BuildAntiGapcloserMenu()
+        public static void BuildAntiGapcloserMenu()
         {
             if (
                 !EntityManager.Heroes.Enemies.Any(
