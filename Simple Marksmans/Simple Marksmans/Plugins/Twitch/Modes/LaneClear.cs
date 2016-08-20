@@ -26,12 +26,52 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
+
+using System;
+using System.Linq;
+using EloBuddy;
+using EloBuddy.SDK;
+
 namespace Simple_Marksmans.Plugins.Twitch.Modes
 {
     internal class LaneClear : Twitch
     {
         public static void Execute()
         {
+            var laneMinions = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, Player.Instance.Position,
+    Player.Instance.GetAutoAttackRange() + 250).ToList();
+
+            if (!laneMinions.Any() &&
+                !(!Settings.LaneClear.EnableIfNoEnemies ||
+                  Player.Instance.CountEnemiesInRange(Settings.LaneClear.ScanRange) >
+                  Settings.LaneClear.AllowedEnemies))
+                return;
+
+            if (W.IsReady() && Settings.LaneClear.UseW && Player.Instance.ManaPercent >= Settings.LaneClear.WMinMana)
+            {
+                var c = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(laneMinions, 200, 950,
+                    250, 1400);
+
+                if (c.HitNumber > 2)
+                {
+                    W.Cast(c.CastPosition);
+                }
+            }
+
+            if (E.IsReady() && Settings.LaneClear.UseE && Player.Instance.ManaPercent >= Settings.LaneClear.EMinMana)
+            {
+                var minions =
+                    laneMinions.Where(
+                        minion =>
+                            !minion.IsDead && minion.IsValidTarget(E.Range) &&
+                            HasDeadlyVenomBuff(minion));
+
+                if (minions.Count() >= Settings.LaneClear.EMinMinionsHit)
+                {
+                    E.Cast();
+                }
+
+            }
         }
     }
 }

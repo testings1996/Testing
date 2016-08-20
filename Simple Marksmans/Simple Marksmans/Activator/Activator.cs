@@ -200,7 +200,7 @@ namespace Simple_Marksmans.Activator
                         {
                             Items[enumValues].ToItem().Cast(target);
                         }
-                        else if (Items[enumValues].ToItem().IsReady() && Items[enumValues].Range == 0f)
+                        else if (Items[enumValues].ToItem().IsReady() && Items[enumValues].Range <= 0f)
                         {
                             switch (Items[enumValues].ItemTargettingType)
                             {

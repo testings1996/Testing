@@ -42,7 +42,10 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
                 Player.Instance.Position,
                 Player.Instance.GetAutoAttackRange() + 250);
 
-            if (laneMinions == null || Player.Instance.CountEnemiesInRange(Settings.LaneClear.ScanRange) > Settings.LaneClear.AllowedEnemies)
+            if (laneMinions == null &&
+                !(!Settings.LaneClear.EnableIfNoEnemies ||
+                  Player.Instance.CountEnemiesInRange(Settings.LaneClear.ScanRange) >
+                  Settings.LaneClear.AllowedEnemies))
                 return;
             
             var minions = laneMinions as IList<Obj_AI_Minion> ?? laneMinions.ToList();
@@ -50,8 +53,7 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
             if (Q.IsReady() && Settings.LaneClear.UseQ &&
                 Player.Instance.ManaPercent >= Settings.LaneClear.MinManaToUseQ && !HasSheenBuff)
             {
-                var farmLoc = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(minions.Where(x => x.Health < Damage.GetSpellDamage(x, SpellSlot.Q)), Q.Width, (int)Q.Range, Q.CastDelay, Q.Speed,
-                    Player.Instance.Position.To2D());
+                var farmLoc = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(minions.Where(x => x.Health < Damage.GetSpellDamage(x, SpellSlot.Q)), 250, 825, 250, 1000);
 
                 if (farmLoc.HitNumber >= Settings.LaneClear.MinMinionsKilledToUseQ)
                 {

@@ -19,13 +19,13 @@ namespace Simple_Marksmans.Plugins.Kalista
             if (Kalista.Q.IsReady())
                 damage += Player.Instance.GetSpellDamage(enemy, SpellSlot.Q);
 
-            if (Activator.Activator.Items[ItemsEnum.BladeOfTheRuinedKing].ToItem().IsReady())
+            if (Activator.Activator.Items[ItemsEnum.BladeOfTheRuinedKing] != null && Activator.Activator.Items[ItemsEnum.BladeOfTheRuinedKing].ToItem().IsReady())
                 damage += Player.Instance.GetItemDamage(enemy, ItemId.Blade_of_the_Ruined_King);
 
-            if (Activator.Activator.Items[ItemsEnum.Cutlass].ToItem().IsReady())
+            if (Activator.Activator.Items[ItemsEnum.Cutlass] != null && Activator.Activator.Items[ItemsEnum.Cutlass].ToItem().IsReady())
                 damage += Player.Instance.GetItemDamage(enemy, ItemId.Bilgewater_Cutlass);
 
-            if (Activator.Activator.Items[ItemsEnum.Gunblade].ToItem().IsReady())
+            if (Activator.Activator.Items[ItemsEnum.Gunblade] != null && Activator.Activator.Items[ItemsEnum.Gunblade].ToItem().IsReady())
                 damage += Player.Instance.GetItemDamage(enemy, ItemId.Hextech_Gunblade);
 
             if (Kalista.E.IsReady())
@@ -42,7 +42,10 @@ namespace Simple_Marksmans.Plugins.Kalista
                 !Kalista.E.IsReady() || target.GetRendBuff().Count < 1)
                 return false;
 
-            var heroClient = target as AIHeroClient;
+            if (!(target is AIHeroClient))
+                return true;
+
+            var heroClient = (AIHeroClient) target;
 
             return !heroClient.HasUndyingBuffA() && !heroClient.HasSpellShield();
         }
@@ -53,10 +56,12 @@ namespace Simple_Marksmans.Plugins.Kalista
                 !Kalista.E.IsReady() || target.GetRendBuff().Count < 1)
                 return false;
 
-            var heroClient = target as AIHeroClient;
-
-            if (heroClient == null)
+            if (!(target is AIHeroClient))
+            {
                 return target.GetRendDamageOnTarget() > target.TotalHealthWithShields();
+            }
+
+            var heroClient = (AIHeroClient) target;
 
             if (heroClient.HasUndyingBuffA() || heroClient.HasSpellShield())
             {
@@ -75,8 +80,7 @@ namespace Simple_Marksmans.Plugins.Kalista
 
         public static float GetRendDamageOnTarget(this Obj_AI_Base target)
         {
-            if (target == null || !target.IsValidTarget(Kalista.E.Range) || target.GetRendBuff() == null ||
-                !Kalista.E.IsReady() || target.GetRendBuff().Count < 1)
+            if (!CanCastEOnUnit(target))
                 return 0f;
 
             var damageReduction = 100 - Kalista.Settings.Misc.ReduceEDmg;

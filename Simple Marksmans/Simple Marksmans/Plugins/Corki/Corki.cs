@@ -145,6 +145,9 @@ namespace Simple_Marksmans.Plugins.Corki
 
         private static float HandleDamageIndicator(Obj_AI_Base unit)
         {
+            if (!Settings.Drawings.DrawDamageIndicator)
+                return 0;
+
             var enemy = (AIHeroClient) unit;
             return enemy != null ? Damage.GetComboDamage(enemy) : 0f;
         }
@@ -1247,14 +1250,24 @@ namespace Simple_Marksmans.Plugins.Corki
 
             private static float GetQDamage(Obj_AI_Base unit)
             {
-                if (unit == null || !Q.IsReady() || unit.HasSpellShield())
+                if (unit == null || !Q.IsReady())
                     return 0f;
 
-                var client = unit as AIHeroClient;
-                if (client != null && client.HasUndyingBuffA())
+                float damage;
+
+                if (!(unit is AIHeroClient))
+                {
+                    damage = QDamage[Q.Level] + Player.Instance.FlatPhysicalDamageMod*QDamageBounsAdMod +
+                             Player.Instance.FlatMagicDamageMod*QDamageTotalApMod;
+
+                    return Player.Instance.CalculateDamageOnUnit(unit, DamageType.Magical, damage);
+                }
+
+                var client = (AIHeroClient) unit;
+                if (client.HasSpellShield() || client.HasUndyingBuffA())
                     return 0f;
 
-                var damage = QDamage[Q.Level] + Player.Instance.FlatPhysicalDamageMod * QDamageBounsAdMod +
+                damage = QDamage[Q.Level] + Player.Instance.FlatPhysicalDamageMod * QDamageBounsAdMod +
                              Player.Instance.FlatMagicDamageMod*QDamageTotalApMod;
 
                 return Player.Instance.CalculateDamageOnUnit(unit, DamageType.Magical, damage);
@@ -1265,10 +1278,7 @@ namespace Simple_Marksmans.Plugins.Corki
                 if (unit == null || !E.IsReady() || time < 0.25f || time > 4)
                     return 0f;
 
-                var client = unit as AIHeroClient;
-
-                if (client != null && client.HasUndyingBuffA())
-                    return 0f;
+                float damage;
 
                 float actualTIme = 0;
 
@@ -1277,23 +1287,51 @@ namespace Simple_Marksmans.Plugins.Corki
                     actualTIme = time - time % 0.25f;
                 }
 
-                var damage = EDamage[Q.Level] / 16 + Player.Instance.FlatPhysicalDamageMod * EDamageBounsAdMod / 16;
+                if (!(unit is AIHeroClient))
+                {
+                    damage = EDamage[Q.Level] / 16 + Player.Instance.FlatPhysicalDamageMod * EDamageBounsAdMod / 16;
+
+                    return Player.Instance.CalculateDamageOnUnit(unit, DamageType.Mixed, damage * (16 / (4 / actualTIme)));
+                }
+
+                var client = (AIHeroClient) unit;
+
+                if (client.HasUndyingBuffA())
+                    return 0f;
+                
+                damage = EDamage[Q.Level] / 16 + Player.Instance.FlatPhysicalDamageMod * EDamageBounsAdMod / 16;
 
                 return Player.Instance.CalculateDamageOnUnit(unit, DamageType.Mixed, damage  * (16 / (4 / actualTIme)));
             }
 
             private static float GetRDamage(Obj_AI_Base unit)
             {
-                if (unit == null || !R.IsReady() || unit.HasSpellShield())
-                    return 0f;
-
-                var client = unit as AIHeroClient;
-
-                if (client != null && client.HasUndyingBuffA())
+                if (unit == null || !R.IsReady())
                     return 0f;
 
                 float damage;
 
+                if (!(unit is AIHeroClient))
+                {
+                    if (HasBigRMissile)
+                    {
+                        damage = RDamageBig[R.Level] + Player.Instance.TotalAttackDamage * RDamageBigTotalAdMod[R.Level] +
+                                 Player.Instance.FlatMagicDamageMod * RDamageBigTotalApMod;
+                    }
+                    else
+                    {
+                        damage = RDamageNormal[R.Level] + Player.Instance.TotalAttackDamage * RDamageNormalTotalAdMod[R.Level] +
+                                 Player.Instance.FlatMagicDamageMod * RDamageNormalTotalApMod;
+                    }
+
+                    return Player.Instance.CalculateDamageOnUnit(unit, DamageType.Magical, damage);
+                }
+
+                var client = (AIHeroClient) unit;
+
+                if (client.HasSpellShield() || client.HasUndyingBuffA())
+                    return 0f;
+                
                 if (HasBigRMissile)
                 {
                     damage = RDamageBig[R.Level] + Player.Instance.TotalAttackDamage*RDamageBigTotalAdMod[R.Level] +

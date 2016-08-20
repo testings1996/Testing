@@ -98,14 +98,13 @@ namespace Simple_Marksmans.Utils
                 Unload();
             }
         }
-
+        
         private void Unload()
         {
             Drawing.OnEndScene -= Drawing_OnEndScene;
             Game.OnWndProc -= Game_OnWndProc;
-
+            
             GC.Collect();
-
             _pickingColor = false;
             _posUpdated = false;
         }

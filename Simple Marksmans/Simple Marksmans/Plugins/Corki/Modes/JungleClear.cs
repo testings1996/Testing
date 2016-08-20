@@ -49,8 +49,7 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
             if (Q.IsReady() && Settings.JungleClear.UseQ &&
                 Player.Instance.ManaPercent >= Settings.JungleClear.MinManaToUseQ && !HasSheenBuff)
             {
-                var farmLoc = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(minions, Q.Width, (int) Q.Range, Q.CastDelay, Q.Speed,
-                    Player.Instance.Position.To2D());
+                var farmLoc = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(minions, 250, 825, 250, 1000);
 
                 if (farmLoc.HitNumber >= 1)
                 {

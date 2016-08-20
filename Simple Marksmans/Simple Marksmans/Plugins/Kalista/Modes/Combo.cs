@@ -77,7 +77,7 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
                 if (Settings.Combo.UseEBeforeEnemyLeavesRange && enemiesWithRendBuff == 1)
                 {
                     var enemyUnit =
-                        EntityManager.Heroes.Enemies.Find(unit => unit.IsValid && unit.IsValidTarget(E.Range) && unit.HasRendBuff());
+                        EntityManager.Heroes.Enemies.Find(unit => !unit.IsDead && unit.IsValid && unit.IsValidTarget(E.Range) && unit.HasRendBuff());
 
                     if (enemyUnit != null && enemyUnit.CanCastEOnUnit() && enemyUnit.Distance(Player.Instance) > E.Range - 100)
                     {

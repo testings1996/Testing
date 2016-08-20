@@ -26,12 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
+
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Twitch.Modes
 {
@@ -39,6 +38,48 @@ namespace Simple_Marksmans.Plugins.Twitch.Modes
     {
         public static void Execute()
         {
+            if (W.IsReady() && Settings.Harass.UseW && Player.Instance.ManaPercent >= Settings.Harass.MinManaToUseW)
+            {
+                var target = TargetSelector.GetTarget(W.Range, DamageType.Physical);
+                if (target != null && !target.HasSpellShield() && Damage.CountEStacks(target) <= 4)
+                {
+                    var pred = W.GetPrediction(target);
+
+                    if (pred.HitChancePercent >= 70)
+                    {
+                        W.Cast(pred.CastPosition);
+                    }
+                }
+            }
+            if (E.IsReady() && Settings.Harass.UseE && Player.Instance.ManaPercent >= Settings.Harass.EMinMana)
+            {
+                if (Settings.Harass.TwoEnemiesMin)
+                {
+                    var count =
+                        EntityManager.Heroes.Enemies.Count(
+                            unit =>
+                                !unit.IsDead && unit.IsValid && unit.IsValidTarget(E.Range) && HasDeadlyVenomBuff(unit));
+
+                    if (count >= 2 &&
+                        EntityManager.Heroes.Enemies.Any(
+                            unit =>
+                                !unit.IsDead && unit.IsValid && unit.IsValidTarget(E.Range) &&
+                                Damage.CountEStacks(unit) >= Settings.Harass.EMinStacks))
+                    {
+                        E.Cast();
+                    }
+                }
+                else
+                {
+                    if (EntityManager.Heroes.Enemies.Any(
+                            unit =>
+                                !unit.IsDead && unit.IsValid && unit.IsValidTarget(E.Range) &&
+                                Damage.CountEStacks(unit) >= Settings.Harass.EMinStacks))
+                    {
+                        E.Cast();
+                    }
+                }
+            }
         }
     }
 }

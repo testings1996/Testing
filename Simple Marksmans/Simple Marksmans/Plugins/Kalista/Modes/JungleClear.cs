@@ -39,6 +39,9 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
     {
         public static void Execute()
         {
+            if (!EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, Q.Range).Any())
+                return;
+
             if (Q.IsReady() && Settings.JungleLaneClear.UseQ && !Player.Instance.IsDashing() && Player.Instance.ManaPercent >= Settings.JungleLaneClear.MinManaForQ)
             {
                 var minions =

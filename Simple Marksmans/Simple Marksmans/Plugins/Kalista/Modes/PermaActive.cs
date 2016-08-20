@@ -73,7 +73,7 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
 
                 if (Settings.JungleLaneClear.UseEToStealBuffs)
                 {
-                    if (EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, E.Range).Any(unit => unit.IsValidTarget(E.Range) && (unit.BaseSkinName.Contains("Blue") || unit.BaseSkinName.Contains("Red")) && unit.IsTargetKillableByRend()))
+                    if (EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, E.Range).Any(unit => unit.IsValidTarget(E.Range) && (unit.BaseSkinName.Contains("Blue") || unit.BaseSkinName.Contains("Red")) && !unit.BaseSkinName.Contains("Mini") && unit.IsTargetKillableByRend()))
                     {
                         Console.WriteLine("[DEBUG] Casting E to ks blue ["+Game.Time+"]");
                         E.Cast();

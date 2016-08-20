@@ -11,7 +11,8 @@ namespace Simple_Marksmans.Utils
     internal class IncomingDamage
     {
         private static readonly Dictionary<int, IncomingDamageArgs> IncomingDamages = new Dictionary<int, IncomingDamageArgs>();
-        
+        private static readonly List<int> Champions = new List<int>();// don't check for every champion
+
         static IncomingDamage()
         {
             Game.OnTick += Game_OnTick;
@@ -23,10 +24,10 @@ namespace Simple_Marksmans.Utils
 
         private static void Obj_AI_Base_OnSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            var heroSender = sender as AIHeroClient;
+            var heroSender = sender;
             var target = args.Target as AIHeroClient;
 
-            if (heroSender == null || target == null || !args.IsAutoAttack() || target.Team == heroSender.Team)
+            if (heroSender == null || heroSender is Obj_AI_Turret || target == null || Champions.All(x => target.NetworkId != x) || !args.IsAutoAttack() || target.Team == heroSender.Team)
                 return;
 
             if (IncomingDamages.ContainsKey(target.NetworkId))
@@ -55,7 +56,7 @@ namespace Simple_Marksmans.Utils
             var turret = sender as Obj_AI_Turret;
             var target = args.Target as AIHeroClient;
 
-            if (turret == null || target == null || target.Team == turret.Team)
+            if (turret == null || target == null || Champions.All(x => target.NetworkId != x) || target.Team == turret.Team)
                 return;
 
             if (IncomingDamages.ContainsKey(target.NetworkId))
@@ -86,7 +87,7 @@ namespace Simple_Marksmans.Utils
             var heroSender = sender as AIHeroClient;
             var target = args.Target as AIHeroClient;
 
-            if (heroSender != null && target != null && target.Team != heroSender.Team)
+            if (heroSender != null && target != null && Champions.Exists(x => target.NetworkId == x) && target.Team != heroSender.Team)
             {
                 if (IncomingDamages.ContainsKey(target.NetworkId))
                 {
@@ -115,7 +116,7 @@ namespace Simple_Marksmans.Utils
                     var polygon = new Geometry.Polygon.Circle(args.End, args.SData.CastRadius);
                     var polygon2 = new Geometry.Polygon.Circle(args.End, args.SData.CastRadiusSecondary);
 
-                    foreach (var hero in EntityManager.Heroes.AllHeroes.Where(ally => polygon.IsInside(ally) || polygon2.IsInside(ally) && ally.Team != heroSender.Team))
+                    foreach (var hero in EntityManager.Heroes.AllHeroes.Where(ally => Champions.Exists(x => ally.NetworkId == x) && polygon.IsInside(ally) || polygon2.IsInside(ally) && ally.Team != heroSender.Team))
                     {
                         if (IncomingDamages.ContainsKey(hero.NetworkId))
                         {
@@ -152,7 +153,7 @@ namespace Simple_Marksmans.Utils
 
                 foreach (
                     var hero in
-                        EntityManager.Heroes.AllHeroes.Where(ally => polygon.IsInside(ally) && ally.Team != heroSender.Team))
+                        EntityManager.Heroes.AllHeroes.Where(ally => Champions.Exists(x => ally.NetworkId == x) && polygon.IsInside(ally) && ally.Team != heroSender.Team))
                 {
                     if (IncomingDamages.ContainsKey(hero.NetworkId))
                     {
@@ -179,15 +180,18 @@ namespace Simple_Marksmans.Utils
 
         public static float GetIncomingDamage(AIHeroClient hero)
         {
+            if(!Champions.Contains(hero.NetworkId))
+                Champions.Add(hero.NetworkId);
+
             if (!IncomingDamages.ContainsKey(hero.NetworkId))
                 return 0f;
-
+            
             return IncomingDamages.FirstOrDefault(x => x.Key == hero.NetworkId).Value != null ? IncomingDamages[hero.NetworkId].Damage : 0f;
         }
 
         private static void Game_OnTick(EventArgs args)
         {
-            if (IncomingDamages.Any(x => Game.Time * 1000 > x.Value.Tick + 500))
+            if (IncomingDamages.Any(x => Game.Time * 1000 > x.Value.Tick + 400))
                 IncomingDamages.Remove(IncomingDamages.FirstOrDefault(x => Game.Time * 1000 > x.Value.Tick + 500).Key);
         }
 
