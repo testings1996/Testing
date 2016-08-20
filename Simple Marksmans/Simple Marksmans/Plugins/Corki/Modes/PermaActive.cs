@@ -26,12 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
+
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Corki.Modes
 {
@@ -39,6 +38,52 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
     {
         public static void Execute()
         {
+            if (R.IsReady())
+            {
+                foreach (var pred in EntityManager.Heroes.Enemies.Where(x=> !x.IsDead && x.IsValidTarget(R.Range) && x.Health < Damage.GetSpellDamage(x, SpellSlot.R)).Select(unit => R.GetPrediction(unit)).Where(pred => !pred.Collision))
+                {
+                    R.Cast(pred.CastPosition);
+                }
+            }
+
+            if (R.IsReady() && Settings.Misc.AutoHarassEnabled && Player.Instance.Spellbook.GetSpell(SpellSlot.R).Ammo >= Settings.Misc.MinStacksToUseR && !HasSheenBuff)
+            {
+                if (HasBigRMissile && !(HasBigRMissile && Settings.Misc.UseBigBomb))
+                    return;
+
+                foreach (
+                    var enemy in
+                        EntityManager.Heroes.Enemies.Where(
+                            hero =>
+                                !hero.IsDead && hero.IsValidTarget(R.Range) && !hero.HasSpellShield() &&
+                                !hero.HasUndyingBuffA() && Settings.Misc.IsAutoHarassEnabledFor(hero))
+                            .OrderByDescending(TargetSelector.GetPriority).ThenBy(x => x.Distance(Player.Instance)))
+                {
+                    var prediction = R.GetPrediction(enemy);
+
+                    if (prediction.Collision && prediction.CollisionObjects != null && Settings.Combo.RAllowCollision)
+                    {
+                        var first =
+                            prediction.CollisionObjects.OrderBy(x => x.Distance(Player.Instance))
+                                .FirstOrDefault();
+
+                        if (first != null)
+                        {
+                            var e =
+                                GetCollisionObjects<Obj_AI_Base>(first)
+                                    .FirstOrDefault(x => x.NetworkId == enemy.NetworkId);
+                            if (e != null)
+                            {
+                                R.Cast(first);
+                            }
+                        }
+                    }
+                    else if (prediction.HitChancePercent >= 60)
+                    {
+                        R.Cast(prediction.CastPosition);
+                    }
+                }
+            }
         }
     }
 }

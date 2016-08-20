@@ -26,12 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
 
 namespace Simple_Marksmans.Plugins.Corki.Modes
 {
@@ -39,7 +38,69 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
     {
         public static void Execute()
         {
-            Chat.Print("JungleClear mode !");
+            var jungleMinions = EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position,
+                Player.Instance.GetAutoAttackRange() + 250);
+
+            if (jungleMinions == null)
+                return;
+
+            var minions = jungleMinions as IList<Obj_AI_Minion> ?? jungleMinions.ToList();
+
+            if (Q.IsReady() && Settings.JungleClear.UseQ &&
+                Player.Instance.ManaPercent >= Settings.JungleClear.MinManaToUseQ && !HasSheenBuff)
+            {
+                var farmLoc = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(minions, Q.Width, (int) Q.Range, Q.CastDelay, Q.Speed,
+                    Player.Instance.Position.To2D());
+
+                if (farmLoc.HitNumber >= 1)
+                {
+                    Q.Cast(farmLoc.CastPosition);
+                }
+            }
+
+            if (E.IsReady() && Settings.JungleClear.UseE &&
+                Player.Instance.ManaPercent >= Settings.JungleClear.MinManaToUseE && !HasSheenBuff)
+            {
+                if (minions.ToList().Any(x => x.Distance(Player.Instance) < 450))
+                {
+                    E.Cast();
+                }
+            }
+
+            if (R.IsReady() && Settings.JungleClear.UseR &&
+                Player.Instance.ManaPercent >= Settings.JungleClear.MinManaToUseR && Player.Instance.Spellbook.GetSpell(SpellSlot.R).Ammo >= Settings.JungleClear.MinStacksToUseR && !HasSheenBuff)
+            {
+                var target = minions.OrderBy(x => x.Distance(Player.Instance)).FirstOrDefault();
+
+                if (target != null)
+                {
+                    var prediction = R.GetPrediction(target);
+
+                    if (prediction.CollisionObjects != null && Settings.JungleClear.RAllowCollision)
+                    {
+                        var first =
+                            prediction.CollisionObjects.OrderBy(x => x.Distance(Player.Instance))
+                                .FirstOrDefault();
+
+                        if (first != null)
+                        {
+                            var enemy =
+                                GetCollisionObjects<Obj_AI_Minion>(first)
+                                    .FirstOrDefault(x => x.NetworkId == target.NetworkId);
+                            if (enemy != null)
+                            {
+                                R.Cast(first);
+                            }
+                        }
+                    }
+                    else if (target.HealthPercent <= 50
+                        ? prediction.HitChancePercent >= 50
+                        : prediction.HitChancePercent >= 80)
+                    {
+                        R.Cast(prediction.CastPosition);
+                    }
+                }
+            }
         }
     }
 }

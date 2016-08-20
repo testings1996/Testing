@@ -32,6 +32,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Corki.Modes
 {
@@ -39,7 +41,60 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Harass mode !");
+            if (Q.IsReady() && Settings.Harass.UseQ && Player.Instance.ManaPercent >= Settings.Harass.MinManaToUseQ && !HasSheenBuff)
+            {
+                var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+
+                if (target != null && !target.HasUndyingBuffA() && !target.HasSpellShield())
+                {
+                    var prediction = Q.GetPrediction(target);
+
+                    if (prediction.HitChancePercent >= 70)
+                    {
+                        Q.Cast(prediction.CastPosition);
+                    }
+                }
+            }
+
+            if (E.IsReady() && Settings.Harass.UseE && Player.Instance.ManaPercent >= Settings.Harass.MinManaToUseE && !HasSheenBuff)
+            {
+                var target = TargetSelector.GetTarget(650, DamageType.Magical);
+
+                if (target != null && !target.HasUndyingBuffA() && target.Distance(Player.Instance) < 500)
+                {
+                    E.Cast();
+                }
+            }
+
+            if (R.IsReady() && Settings.Harass.UseR && Player.Instance.ManaPercent >= Settings.Harass.MinManaToUseR && Player.Instance.Spellbook.GetSpell(SpellSlot.R).Ammo >= Settings.Harass.MinStacksToUseR && !HasSheenBuff)
+            {
+                var target = TargetSelector.GetTarget(R.Range, DamageType.Magical);
+
+                if (target != null && !target.HasUndyingBuffA() && !target.HasSpellShield())
+                {
+                    var prediction = R.GetPrediction(target);
+
+                    if (prediction.CollisionObjects != null && Settings.Harass.RAllowCollision)
+                    {
+                        var first =
+                            prediction.CollisionObjects.OrderBy(x => x.Distance(Player.Instance))
+                                .FirstOrDefault();
+
+                        if (first != null)
+                        {
+                            var enemy = GetCollisionObjects<AIHeroClient>(first).FirstOrDefault(x => x.NetworkId == target.NetworkId);
+                            if (enemy != null)
+                            {
+                                R.Cast(first);
+                            }
+                        }
+                    }
+                    else if (prediction.HitChancePercent >= 85)
+                    {
+                        R.Cast(prediction.CastPosition);
+                    }
+                }
+            }
         }
     }
 }

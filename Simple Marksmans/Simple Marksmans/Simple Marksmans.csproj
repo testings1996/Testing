@@ -256,6 +256,7 @@
     <Compile Include="Utils\PermaShow\PermaShow.cs" />
     <Compile Include="Utils\PermaShow\Rectangle.cs" />
     <Compile Include="Utils\PermaShow\Text.cs" />
+    <Compile Include="Utils\SafeSpotFinder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -75,5 +75,10 @@ namespace Simple_Marksmans.Utils
         {
             return target.Health + target.AllShield + target.AttackShield + (includeMagicShields ? target.MagicShield : 0);
         }
+
+        public static bool HasSheenBuff(this AIHeroClient unit)
+        {
+            return unit.Buffs.Any(b => b.IsActive && b.DisplayName.ToLowerInvariant() == "sheen");
+        }
     }
 }

@@ -88,7 +88,7 @@ namespace Simple_Marksmans.Utils.PermaShow
                 Game.OnTick += Game_OnTick;
                 Game.OnWndProc += Game_OnWndProc;
 
-            }, 1250);
+            }, 2500);
         }
         
         private void CreateMenu()

@@ -47,10 +47,10 @@ namespace Simple_Marksmans.Plugins.Kalista
 {
     internal class Kalista : ChampionPlugin
     {
-        public static Spell.Skillshot Q { get; private set; }
+        public static Spell.Skillshot Q { get; }
         public static Spell.Active W { get; private set; }
-        public static Spell.Active E { get; private set; }
-        public static Spell.Active R { get; private set; }
+        public static Spell.Active E { get; }
+        public static Spell.Active R { get; }
 
         private static Menu ComboMenu { get; set; }
         private static Menu HarassMenu { get; set; }
@@ -68,7 +68,7 @@ namespace Simple_Marksmans.Plugins.Kalista
         {
             Q = new Spell.Skillshot(SpellSlot.Q, 1150, SkillShotType.Linear, 250, 2400, 40)
             {
-                AllowedCollisionCount = int.MaxValue
+                AllowedCollisionCount = 0
             };
             W = new Spell.Active(SpellSlot.W, 5500);
             E = new Spell.Active(SpellSlot.E, 1000);
@@ -104,7 +104,7 @@ namespace Simple_Marksmans.Plugins.Kalista
                         unit.Buffs.Any(
                             n =>
                                 n.Caster.IsMe &&
-                                n.Name.Equals("kalistacoopstrikeally", StringComparison.OrdinalIgnoreCase)));
+                                n.DisplayName.ToLowerInvariant() =="kalistacoopstrikeally"));
 
                 if (entity != null)
                 {
@@ -117,6 +117,7 @@ namespace Simple_Marksmans.Plugins.Kalista
 
             if (R.IsReady() && Settings.Misc.SaveAlly && !SouldBoundAlliedHero.IsInShopRange() && IncomingDamage.GetIncomingDamage(SouldBoundAlliedHero) > SouldBoundAlliedHero.Health)
             {
+                Misc.PrintInfoMessage("Saving <font color=\"#adff2f\">"+SouldBoundAlliedHero.Hero+"</font> from death.");
                 R.Cast();
             }
 
@@ -140,10 +141,14 @@ namespace Simple_Marksmans.Plugins.Kalista
                         {
                             if (Settings.Misc.BlitzComboKillable && enemy.Health < enemy.GetComboDamage(8))
                             {
+                                Misc.PrintInfoMessage("Doing Blitzcrank-Kalista combo on <font color=\"#ff1493\">" +
+                                                      enemy.Hero + "</font>");
                                 R.Cast();
                             }
                             else
                             {
+                                Misc.PrintInfoMessage("Doing Blitzcrank-Kalista combo on <font color=\"#ff1493\">" +
+                                                      enemy.Hero + "</font>");
                                 R.Cast();
                             }
                         }
@@ -163,10 +168,14 @@ namespace Simple_Marksmans.Plugins.Kalista
                         {
                             if (Settings.Misc.BlitzComboKillable && enemy.Health < enemy.GetComboDamage(8))
                             {
+                                Misc.PrintInfoMessage("Doing Tahm Kench-Kalista combo on <font color=\"#ff1493\">" +
+                                                      enemy.Hero + "</font>");
                                 R.Cast();
                             }
                             else
                             {
+                                Misc.PrintInfoMessage("Doing Tahm Kench-Kalista combo on <font color=\"#ff1493\">" +
+                                                      enemy.Hero + "</font>");
                                 R.Cast();
                             }
                         }
@@ -186,10 +195,14 @@ namespace Simple_Marksmans.Plugins.Kalista
                         {
                             if (Settings.Misc.BlitzComboKillable && enemy.Health < enemy.GetComboDamage(8))
                             {
+                                Misc.PrintInfoMessage("Doing Skarner-Kalista combo on <font color=\"#ff1493\">" +
+                                                      enemy.Hero + "</font>");
                                 R.Cast();
                             }
                             else
                             {
+                                Misc.PrintInfoMessage("Doing Skarner-Kalista combo on <font color=\"#ff1493\">" +
+                                                      enemy.Hero + "</font>");
                                 R.Cast();
                             }
                         }
@@ -265,14 +278,6 @@ namespace Simple_Marksmans.Plugins.Kalista
                 Circle.Draw(ColorPicker[1].Color, E.Range, Player.Instance);
             if (Settings.Drawings.DrawR && (!Settings.Drawings.DrawSpellRangesWhenReady || R.IsReady()))
                 Circle.Draw(ColorPicker[2].Color, R.Range, Player.Instance);
-
-            foreach (var varr in EntityManager.Heroes.Enemies.Where(x => x.HasRendBuff()))
-            {
-                Text.X = (int) varr.HPBarPosition.X;
-                Text.Y = (int) varr.HPBarPosition.Y - 50;
-                Text.TextValue = "Damage : " + varr.GetRendDamageOnTarget();
-                Text.Draw();
-            }
 
             if (Settings.Flee.JumpWithQ && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
             {

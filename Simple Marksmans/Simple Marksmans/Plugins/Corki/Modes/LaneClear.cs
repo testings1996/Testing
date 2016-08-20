@@ -26,7 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
+
+using System.Collections.Generic;
+using System.Linq;
 using EloBuddy;
+using EloBuddy.SDK;
 
 namespace Simple_Marksmans.Plugins.Corki.Modes
 {
@@ -34,7 +38,70 @@ namespace Simple_Marksmans.Plugins.Corki.Modes
     {
         public static void Execute()
         {
-            Chat.Print("LaneClear mode !");
+            var laneMinions = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy,
+                Player.Instance.Position,
+                Player.Instance.GetAutoAttackRange() + 250);
+
+            if (laneMinions == null || Player.Instance.CountEnemiesInRange(Settings.LaneClear.ScanRange) > Settings.LaneClear.AllowedEnemies)
+                return;
+            
+            var minions = laneMinions as IList<Obj_AI_Minion> ?? laneMinions.ToList();
+
+            if (Q.IsReady() && Settings.LaneClear.UseQ &&
+                Player.Instance.ManaPercent >= Settings.LaneClear.MinManaToUseQ && !HasSheenBuff)
+            {
+                var farmLoc = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(minions.Where(x => x.Health < Damage.GetSpellDamage(x, SpellSlot.Q)), Q.Width, (int)Q.Range, Q.CastDelay, Q.Speed,
+                    Player.Instance.Position.To2D());
+
+                if (farmLoc.HitNumber >= Settings.LaneClear.MinMinionsKilledToUseQ)
+                {
+                    Q.Cast(farmLoc.CastPosition);
+                }
+            }
+
+            if (E.IsReady() && Settings.LaneClear.UseE &&
+                Player.Instance.ManaPercent >= Settings.LaneClear.MinManaToUseE && !HasSheenBuff)
+            {
+                if (minions.ToList().Any(x => x.Distance(Player.Instance) < 450))
+                {
+                    E.Cast();
+                }
+            }
+
+            if (R.IsReady() && Settings.LaneClear.UseR &&
+                Player.Instance.ManaPercent >= Settings.LaneClear.MinManaToUseR && Player.Instance.Spellbook.GetSpell(SpellSlot.R).Ammo >= Settings.LaneClear.MinStacksToUseR && !HasSheenBuff)
+            {
+                var target = minions.OrderBy(x => x.Distance(Player.Instance)).FirstOrDefault();
+
+                if (target != null)
+                {
+                    var prediction = R.GetPrediction(target);
+
+                    if (prediction.CollisionObjects != null && Settings.LaneClear.RAllowCollision)
+                    {
+                        var first =
+                            prediction.CollisionObjects.OrderBy(x => x.Distance(Player.Instance))
+                                .FirstOrDefault();
+
+                        if (first != null)
+                        {
+                            var enemy =
+                                GetCollisionObjects<Obj_AI_Minion>(first)
+                                    .FirstOrDefault(x => x.NetworkId == target.NetworkId);
+                            if (enemy != null)
+                            {
+                                R.Cast(first);
+                            }
+                        }
+                    }
+                    else if (target.HealthPercent <= 50
+                        ? prediction.HitChancePercent >= 50
+                        : prediction.HitChancePercent >= 80)
+                    {
+                        R.Cast(prediction.CastPosition);
+                    }
+                }
+            }
         }
     }
 }

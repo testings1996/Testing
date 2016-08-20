@@ -75,6 +75,7 @@ namespace Simple_Marksmans.Utils
         {
             if (FemaleChampions.Any(key => message.Contains(key)))
             {
+                message = Regex.Replace(message, "he", "she", RegexOptions.IgnoreCase);
                 message = Regex.Replace(message, "him", "her", RegexOptions.IgnoreCase);
                 message = Regex.Replace(message, "his", "hers", RegexOptions.IgnoreCase);
             }
