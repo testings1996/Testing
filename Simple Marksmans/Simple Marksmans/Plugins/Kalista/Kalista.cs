@@ -28,6 +28,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using EloBuddy;
@@ -97,17 +98,27 @@ namespace Simple_Marksmans.Plugins.Kalista
 
         private static void Game_OnTick(EventArgs args)
         {
-            if (SouldBoundAlliedHero != null)
+            if (Player.Instance.IsDead)
+                return;
+
+            if (SouldBoundAlliedHero == null)
             {
                 var entity = EntityManager.Heroes.Allies.Find(
-                    unit =>
+                    unit => !unit.IsMe &&
                         unit.Buffs.Any(
                             n =>
                                 n.Caster.IsMe &&
-                                n.DisplayName.ToLowerInvariant() =="kalistacoopstrikeally"));
+                                n.DisplayName.ToLowerInvariant() =="kalistapassivecoopstrike"));
 
                 if (entity != null)
                 {
+                    var allies =
+                        (from aiHeroClient in EntityManager.Heroes.Allies
+                            where !aiHeroClient.IsMe
+                            select aiHeroClient.Hero.ToString()).ToList();
+
+                    MiscMenu["Plugins.Kalista.MiscMenu.SoulBoundHero"].Cast<ComboBox>().CurrentValue = allies.FindIndex(x=>x.Equals(entity.Hero.ToString()));
+
                     SouldBoundAlliedHero = entity;
                 }
             }
@@ -115,7 +126,7 @@ namespace Simple_Marksmans.Plugins.Kalista
             if (SouldBoundAlliedHero == null)
                 return;
 
-            if (R.IsReady() && Settings.Misc.SaveAlly && !SouldBoundAlliedHero.IsInShopRange() && IncomingDamage.GetIncomingDamage(SouldBoundAlliedHero) > SouldBoundAlliedHero.Health)
+            if (R.IsReady() && Settings.Misc.SaveAlly && SouldBoundAlliedHero.HealthPercent < 15 && !SouldBoundAlliedHero.IsInShopRange() && IncomingDamage.GetIncomingDamage(SouldBoundAlliedHero) > SouldBoundAlliedHero.Health)
             {
                 Misc.PrintInfoMessage("Saving <font color=\"#adff2f\">"+SouldBoundAlliedHero.Hero+"</font> from death.");
                 R.Cast();
@@ -137,7 +148,7 @@ namespace Simple_Marksmans.Plugins.Kalista
                                             buff.IsActive && buff.Name.ToLowerInvariant() == "rocketgrab2" &&
                                             buff.Caster.NetworkId == SouldBoundAlliedHero.NetworkId));
 
-                        if (enemy != null && enemy.Distance(SouldBoundAlliedHero) > 500)
+                        if (enemy != null && enemy.Distance(Player.Instance) > 500)
                         {
                             if (Settings.Misc.BlitzComboKillable && enemy.Health < enemy.GetComboDamage(8))
                             {
@@ -164,7 +175,7 @@ namespace Simple_Marksmans.Plugins.Kalista
                                             buff.IsActive && buff.Name.ToLowerInvariant() == "tahmkenchwdevoured" &&
                                             buff.Caster.NetworkId == SouldBoundAlliedHero.NetworkId));
 
-                        if (enemy != null && enemy.Distance(SouldBoundAlliedHero) > 500)
+                        if (enemy != null && enemy.Distance(Player.Instance) > 500)
                         {
                             if (Settings.Misc.BlitzComboKillable && enemy.Health < enemy.GetComboDamage(8))
                             {
@@ -191,7 +202,7 @@ namespace Simple_Marksmans.Plugins.Kalista
                                             buff.IsActive && buff.Name.ToLowerInvariant() == "skarnerimpale" &&
                                             buff.Caster.NetworkId == SouldBoundAlliedHero.NetworkId));
 
-                        if (enemy != null && enemy.Distance(SouldBoundAlliedHero) > 500)
+                        if (enemy != null && enemy.Distance(Player.Instance) > 500)
                         {
                             if (Settings.Misc.BlitzComboKillable && enemy.Health < enemy.GetComboDamage(8))
                             {
@@ -251,7 +262,7 @@ namespace Simple_Marksmans.Plugins.Kalista
 
         public static float HandleDamageIndicator(Obj_AI_Base target)
         {
-            if (!Settings.Drawings.DrawDamageIndicator)
+            if (!Settings.Drawings.DrawDamageIndicator || Player.Instance.IsDead)
                 return 0f;
 
             if (!(target is AIHeroClient))
@@ -272,6 +283,9 @@ namespace Simple_Marksmans.Plugins.Kalista
 
         protected override void OnDraw()
         {
+            if (Player.Instance.IsDead)
+                return;
+
             if (Settings.Drawings.DrawQ && (!Settings.Drawings.DrawSpellRangesWhenReady || Q.IsReady()))
                 Circle.Draw(ColorPicker[0].Color, Q.Range, Player.Instance);
             if (Settings.Drawings.DrawE && (!Settings.Drawings.DrawSpellRangesWhenReady || E.IsReady()))
@@ -282,6 +296,36 @@ namespace Simple_Marksmans.Plugins.Kalista
             if (Settings.Flee.JumpWithQ && Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Flee))
             {
                 WallJumper.DrawSpots();
+            }
+
+            if (!Settings.Drawings.DrawDamageIndicator)
+                return;
+
+            foreach (var source in EntityManager.Heroes.Enemies.Where(x => x.IsVisible && x.Position.IsOnScreen() && x.HasRendBuff()))
+            {
+                var hpPosition = source.HPBarPosition;
+                hpPosition.Y = hpPosition.Y + 30; // tracker friendly.
+                var timeLeft = source.GetRendBuff().EndTime - Game.Time;
+                var endPos = timeLeft * 0x3e8 / 0x25;
+
+                var degree = Misc.GetNumberInRangeFromProcent(timeLeft * 1000d / 4000d * 100d, 3, 110);
+                var color = new Misc.HsvColor(degree, 1, 1).ColorFromHsv();
+
+                Text.X = (int)(hpPosition.X + endPos);
+                Text.Y = (int)hpPosition.Y + 15; // + text size 
+                Text.Color = color;
+                Text.TextValue = timeLeft.ToString("F1");
+                Text.Draw();
+
+                var percentDamage = Math.Min(100, source.GetRendDamageOnTarget() / source.TotalHealthWithShields() * 100);
+
+                Text.X = (int)(hpPosition.X - 50);
+                Text.Y = (int)source.HPBarPosition.Y;
+                Text.Color = new Misc.HsvColor(Misc.GetNumberInRangeFromProcent(percentDamage, 3, 110), 1, 1).ColorFromHsv();
+                Text.TextValue = percentDamage.ToString("F1");
+                Text.Draw();
+
+                Drawing.DrawLine(hpPosition.X + endPos, hpPosition.Y, hpPosition.X, hpPosition.Y, 1, color);
             }
         }
 
@@ -354,7 +398,8 @@ namespace Simple_Marksmans.Plugins.Kalista
 
             JungleLaneClearMenu.AddLabel("Rend (E) settings :");
             JungleLaneClearMenu.Add("Plugins.Kalista.JungleLaneClearMenu.UseE", new CheckBox("Use E"));
-            JungleLaneClearMenu.Add("Plugins.Kalista.JungleLaneClearMenu.UseEForUnkillable", new CheckBox("Use E to lasthit unkillable minions"));
+            JungleLaneClearMenu.Add("Plugins.Kalista.JungleLaneClearMenu.UseEForUnkillable",
+                new CheckBox("Use E to lasthit unkillable minions"));
             JungleLaneClearMenu.Add("Plugins.Kalista.JungleLaneClearMenu.MinManaForE",
                 new Slider("Min mana percentage ({0}%) to use E", 50, 1));
             JungleLaneClearMenu.Add("Plugins.Kalista.JungleLaneClearMenu.MinMinionsForE",
@@ -382,29 +427,64 @@ namespace Simple_Marksmans.Plugins.Kalista
             DrawingsMenu.AddLabel("Pierce (Q) drawing settings :");
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawQ", new CheckBox("Draw Q range"));
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawQColor", new CheckBox("Change color", false))
-                .OnValueChange += (a, b) => ColorPicker[0].Initialize(Color.Aquamarine);
+                .OnValueChange += (a, b) =>
+                {
+                    if (!b.NewValue)
+                        return;
+
+                    ColorPicker[0].Initialize(Color.Aquamarine);
+                    a.CurrentValue = false;
+                };
             DrawingsMenu.AddSeparator(5);
 
             DrawingsMenu.AddLabel("Rend (E) drawing settings :");
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawE", new CheckBox("Draw E range"));
-            DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawEColor", new CheckBox("Change color", false)).OnValueChange += (a, b) => ColorPicker[1].Initialize(Color.Aquamarine);
+            DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawEColor", new CheckBox("Change color", false))
+                .OnValueChange += (a, b) =>
+                {
+                    if (!b.NewValue)
+                        return;
+
+                    ColorPicker[1].Initialize(Color.Aquamarine);
+                    a.CurrentValue = false;
+                };
             DrawingsMenu.AddSeparator(5);
 
             DrawingsMenu.AddLabel("Fate's Call (R) drawing settings :");
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawR", new CheckBox("Draw R range"));
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawRColor", new CheckBox("Change color", false))
-                .OnValueChange += (a, b) => ColorPicker[2].Initialize(Color.Aquamarine);
+                .OnValueChange += (a, b) =>
+                {
+                    if (!b.NewValue)
+                        return;
+
+                    ColorPicker[2].Initialize(Color.Aquamarine);
+                    a.CurrentValue = false;
+                };
             DrawingsMenu.AddSeparator(5);
 
             DrawingsMenu.AddLabel("Damage indicator drawing settings :");
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawDamageIndicator",
-                new CheckBox("Draw damage indicator on enemy HP bars"));
+                new CheckBox("Draw damage indicator on enemy HP bars")).OnValueChange += (a, b) =>
+                {
+                    if (b.NewValue)
+                        DamageIndicator.DamageDelegate = HandleDamageIndicator;
+                    else if (!b.NewValue)
+                        DamageIndicator.DamageDelegate = null;
+                };
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DrawDamageIndicatorColor",
                 new CheckBox("Change color", false)).OnValueChange +=
-                (a, b) => ColorPicker[3].Initialize(Color.Aquamarine);
+                (a, b) =>
+                {
+                    if (!b.NewValue)
+                        return;
+
+                    ColorPicker[3].Initialize(Color.Aquamarine);
+                    a.CurrentValue = false;
+                };
             DrawingsMenu.Add("Plugins.Kalista.DrawingsMenu.DamageIndicatorMode",
                 new ComboBox("Damage indicator mode", 0, "Only E damage", "Combo damage"));
-            
+
 
             MiscMenu = MenuManager.Menu.AddSubMenu("Misc");
             MiscMenu.AddGroupLabel("Misc settings for Kalista addon");
@@ -419,7 +499,20 @@ namespace Simple_Marksmans.Plugins.Kalista
 
             MiscMenu.Add("Plugins.Kalista.MiscMenu.ReduceEDmg",
                 new Slider("Reduce E damage calculations by ({0}%) percent", 5, 1));
-            MiscMenu.AddLabel("Reduces calculated Rend damage by desired amount. Might help if Kalista uses E too early.");
+            MiscMenu.AddLabel(
+                "Reduces calculated Rend damage by desired amount. Might help if Kalista uses E too early.");
+            MiscMenu.AddSeparator(5);
+
+            var allies =
+                (from aiHeroClient in EntityManager.Heroes.Allies
+                    where !aiHeroClient.IsMe
+                    select aiHeroClient.Hero.ToString()).ToList();
+
+            var soulBound = MiscMenu.Add("Plugins.Kalista.MiscMenu.SoulBoundHero", new ComboBox("Soulbound : ", allies));
+            soulBound.OnValueChange += (a, b) =>
+            {
+                SouldBoundAlliedHero = EntityManager.Heroes.Allies.Find(x => x.Hero.ToString() == soulBound.DisplayName);
+            };
         }
 
         protected override void PermaActive()

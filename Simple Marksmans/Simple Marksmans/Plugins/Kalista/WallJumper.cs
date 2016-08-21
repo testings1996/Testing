@@ -20,12 +20,10 @@ namespace Simple_Marksmans.Plugins.Kalista
             },
             {
                 new Vector3(4205.026f, 6230.98f, 52.04443f), new Vector3(3390.128f, 7107.43f, 51.62903f)
-            }
-            ,
+            },
             {
                 new Vector3(4058.4f, 6407.077f, 52.46643f), new Vector3(4344.324f, 6137.956f, 52.11548f)
-            }
-            ,
+            },
             {
                 new Vector3(3648.005f, 6740.299f, 52.45801f), new Vector3(3432.113f, 7171.313f, 51.7063f)
             },

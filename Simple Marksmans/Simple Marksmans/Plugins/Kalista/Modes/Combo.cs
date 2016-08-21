@@ -90,7 +90,7 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
                     }
                 }
 
-                if (Settings.Combo.UseEBeforeDeath && Player.Instance.HealthPercent < 5)
+                if (Settings.Combo.UseEBeforeDeath && Player.Instance.HealthPercent < 5 && IncomingDamage.GetIncomingDamage(Player.Instance) > Player.Instance.Health)
                 {
                     E.Cast();
                     Console.WriteLine("[DEBUG] Casting E before death.");

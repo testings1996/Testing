@@ -43,16 +43,6 @@ namespace Simple_Marksmans.Plugins.Twitch.Modes
             if (!jungleMinions.Any())
                 return;
 
-            if (W.IsReady() && Settings.JungleClear.UseW && Player.Instance.ManaPercent >= Settings.JungleClear.WMinMana)
-            {
-                var c = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(jungleMinions, 200, 950,
-                    250, 1400);
-
-                if (c.HitNumber > 1)
-                {
-                    W.Cast(c.CastPosition);
-                }
-            }
 
             if (E.IsReady() && Settings.JungleClear.UseE && Player.Instance.ManaPercent >= Settings.JungleClear.EMinMana)
             {
@@ -67,6 +57,17 @@ namespace Simple_Marksmans.Plugins.Twitch.Modes
                 {
                     Console.WriteLine("[DEBUG] Casting E to ks blue [" + Game.Time + "]");
                     E.Cast();
+                }
+            }
+
+            if (W.IsReady() && Settings.JungleClear.UseW && Player.Instance.ManaPercent >= Settings.JungleClear.WMinMana)
+            {
+                var c = EntityManager.MinionsAndMonsters.GetCircularFarmLocation(jungleMinions, 200, 950,
+                    250, 1400);
+
+                if (c.HitNumber > 1)
+                {
+                    W.Cast(c.CastPosition);
                 }
             }
         }

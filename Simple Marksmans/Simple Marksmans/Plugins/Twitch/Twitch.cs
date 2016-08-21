@@ -149,8 +149,8 @@ namespace Simple_Marksmans.Plugins.Twitch
                 var intersection = polygon.Points[0].Intersection(polygon.Points[2],
                     polygon.Points[1], polygon.Points[3]);
 
-                int count = EntityManager.Heroes.Enemies.Count(x => !x.IsDead && x.IsValidTarget(850) && polygon.IsInside(x));
-                int countv2 = EntityManager.Heroes.Enemies.Count(x => !x.IsDead && x.IsValidTarget(850) && new Geometry.Polygon.Circle(x.Position, x.BoundingRadius).IsInside(intersection.Point));
+                var count = EntityManager.Heroes.Enemies.Count(x => !x.IsDead && x.IsValidTarget(850) && polygon.IsInside(x));
+                var countv2 = EntityManager.Heroes.Enemies.Count(x => !x.IsDead && x.IsValidTarget(850) && new Geometry.Polygon.Circle(x.Position, x.BoundingRadius).IsInside(intersection.Point));
 
                 if (count >= Settings.Combo.RIfEnemiesHit || countv2 > Settings.Combo.RIfEnemiesHit)
                 {
@@ -185,19 +185,33 @@ namespace Simple_Marksmans.Plugins.Twitch
             if (Settings.Drawings.DrawR && (!Settings.Drawings.DrawSpellRangesWhenReady || R.IsReady()))
                 Circle.Draw(ColorPicker[2].Color, R.Range, Player.Instance);
 
-            foreach (var xd in EntityManager.Heroes.Enemies.Where(HasDeadlyVenomBuff))
-            {
-                Text.X = (int)xd.HPBarPosition.X;
-                Text.Y = (int)xd.HPBarPosition.Y - 50;
-                Text.TextValue = "Damage : " + Damage.GetEDamage(xd, false);
-                Text.Draw();
-            }
-
             if (_changingRangeScan)
                 Circle.Draw(Color.White,
                     LaneClearMenu["Plugins.Twitch.LaneClearMenu.ScanRange"].Cast<Slider>().CurrentValue, Player.Instance);
 
+            if (!Settings.Drawings.DrawDamageIndicator)
+                return;
+            
+            foreach (var source in EntityManager.Heroes.Enemies.Where(x=> x.IsVisible && x.Position.IsOnScreen() && HasDeadlyVenomBuff(x)))
+            {
+                var hpPosition = source.HPBarPosition;
+                hpPosition.Y = hpPosition.Y + 30; // tracker friendly.
+                var timeLeft = GetDeadlyVenomBuff(source).EndTime - Game.Time;
+                var endPos = timeLeft * 0x3e8 / 0x37;
+                
+                var degree = Misc.GetNumberInRangeFromProcent(timeLeft * 1000d / 6000d * 100d, 3, 110);
+                var color = new Misc.HsvColor(degree, 1, 1).ColorFromHsv();
+
+                Text.X = (int) (hpPosition.X + endPos);
+                Text.Y = (int)hpPosition.Y + 15; // + text size 
+                Text.Color = color;
+                Text.TextValue = timeLeft.ToString("F1");
+                Text.Draw();
+
+                Drawing.DrawLine(hpPosition.X + endPos, hpPosition.Y, hpPosition.X, hpPosition.Y, 1, color);
+            }
         }
+
         protected override void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
         }
@@ -389,8 +403,8 @@ namespace Simple_Marksmans.Plugins.Twitch
                 {
                     if (b.NewValue)
                         DamageIndicator.DamageDelegate = HandleDamageIndicator;
-
-                    DamageIndicator.DamageDelegate = null;
+                    else if(!b.NewValue)
+                        DamageIndicator.DamageDelegate = null;
                 };
             DrawingsMenu.Add("Plugins.Twitch.DrawingsMenu.DrawDamageIndicatorColor",
                 new CheckBox("Change color", false)).OnValueChange += (a, b) =>

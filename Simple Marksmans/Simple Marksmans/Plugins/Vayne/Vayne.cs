@@ -42,28 +42,30 @@ namespace Simple_Marksmans.Plugins.Vayne
 {
     internal class Vayne : ChampionPlugin
     {
-        public static Spell.Skillshot Q;
-        public static ColorPicker[] ColorPicker = new ColorPicker[3];
-        public static Menu Menu;
+        public static Spell.Skillshot Q { get; }
+        public static Spell.Active W { get; }
+        public static Spell.Targeted E { get; }
+        public static Spell.Active R { get; }
+
+        private static Menu ComboMenu { get; set; }
+        private static Menu HarassMenu { get; set; }
+        private static Menu JungleClearMenu { get; set; }
+        private static Menu LaneClearMenu { get; set; }
+        private static Menu MiscMenu { get; set; }
+        private static Menu DrawingsMenu { get; set; }
+
+        private static readonly ColorPicker[] ColorPicker;
+
+        private static bool _changingRangeScan;
 
         static Vayne()
         {
             Q = new Spell.Skillshot(SpellSlot.Q, 300, SkillShotType.Linear);
-
-            Orbwalker.OnPostAttack += Orbwalker_OnPostAttack;
-
-            ColorPicker[0] = new ColorPicker("VayneQ", new ColorBGRA(1, 222, 44, 255));
-            ColorPicker[1] = new ColorPicker("VayneW", new ColorBGRA(2, 222, 44, 255));
-            ColorPicker[2] = new ColorPicker("VayneE", new ColorBGRA(3, 222, 44, 255));
+            W = new Spell.Active(SpellSlot.W);
+            E = new Spell.Targeted(SpellSlot.E, 650);
+            R = new Spell.Active(SpellSlot.R);
         }
-
-        private static void Orbwalker_OnPostAttack(AttackableUnit target, EventArgs args)
-        {
-            if (Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.LaneClear))
-            {
-                Modes.LaneClear.AfterAttack(target, args);
-            }
-        }
+        
         protected override void OnInterruptible(AIHeroClient sender, InterrupterEventArgs args)
         {
             Misc.PrintInfoMessage("[Vayne : OnInterruptible] "+sender.ChampionName + " | "+args.SpellSlot+" | "+args.DangerLevel);
@@ -76,17 +78,10 @@ namespace Simple_Marksmans.Plugins.Vayne
 
         protected override void OnDraw()
         {
-            Circle.Draw(ColorPicker[0].Color, 1200, Player.Instance);
-            Circle.Draw(ColorPicker[1].Color, 400, Player.Instance);
-            Circle.Draw(ColorPicker[2].Color, 200, Player.Instance);
         }
 
         protected override void CreateMenu()
         {
-            Menu = MenuManager.Menu.AddSubMenu("Vayne settings");
-            Menu.Add("Open1", new CheckBox("Change Color 1")).OnValueChange += (s, a) => ColorPicker[0].Initialize(Color.Aquamarine);
-            Menu.Add("Open2", new CheckBox("Change Color 2")).OnValueChange += (s, a) => ColorPicker[1].Initialize(Color.Aquamarine);
-            Menu.Add("Open3", new CheckBox("Change Color 3")).OnValueChange += (s, a) => ColorPicker[2].Initialize(Color.Aquamarine);
         }
 
         protected override void PermaActive()

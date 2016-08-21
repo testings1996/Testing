@@ -41,6 +41,9 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
     {
         public static void Execute()
         {
+            if (Player.Instance.IsDead)
+                return;
+
             Orbwalker.ForcedTarget = null;
 
             var target = TargetSelector.GetTarget(Q.Range, DamageType.Physical);
@@ -79,11 +82,6 @@ namespace Simple_Marksmans.Plugins.Kalista.Modes
                         E.Cast();
                     }
                 }
-            }
-
-            if (IncomingDamage.GetIncomingDamage(Player.Instance) > 0f)
-            {
-                Console.WriteLine("[DEBUG] Incoming damage : "+ IncomingDamage.GetIncomingDamage(Player.Instance));
             }
         }
     }

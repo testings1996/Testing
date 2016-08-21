@@ -180,8 +180,11 @@ namespace Simple_Marksmans.Utils
 
         public static float GetIncomingDamage(AIHeroClient hero)
         {
-            if(!Champions.Contains(hero.NetworkId))
+            if (!Champions.Contains(hero.NetworkId))
+            {
                 Champions.Add(hero.NetworkId);
+                Core.DelayAction(() => Champions.RemoveAll(x => x == hero.NetworkId), 2000);
+            }
 
             if (!IncomingDamages.ContainsKey(hero.NetworkId))
                 return 0f;

@@ -225,7 +225,25 @@ namespace Simple_Marksmans.Utils
             public int MinValue { get; }
             public int MaxValue { get; }
 
-            public int Value { get; set; }
+            private int _value;
+
+            public int Value
+            {
+                get
+                {
+                    if (_value > MaxValue)
+                    {
+                        return MaxValue;
+                    }
+                    return _value < MinValue ? MinValue : _value;
+                }
+                set
+                {
+                    if (value > MaxValue)
+                        _value = MaxValue;
+                    _value = value < MinValue ? MinValue : value;
+                }
+            }
 
             public Vector2[] Positions { get; set; }
             public Color Color { get; }
@@ -238,11 +256,11 @@ namespace Simple_Marksmans.Utils
                 MaxValue = maxValue;
                 Positions = positions;
                 Color = color;
-                Value = value;
+                _value = value;
 
                 using (var backgroundWorker = new BackgroundWorker())
                 {
-                    Console.WriteLine("[-----[Color Picker : Setting Values]----]");
+                    Console.WriteLine("[DEBUG] Color Picker : Setting Values...");
 
                     backgroundWorker.DoWork += (sender, args) =>
                     {
@@ -254,7 +272,7 @@ namespace Simple_Marksmans.Utils
                     };
                     backgroundWorker.RunWorkerCompleted += (sender, args) =>
                     {
-                        Console.WriteLine("[-----[Color Picker : Values set]----]");
+                        Console.WriteLine("[DEBUG] Color Picker : Values has been set.");
                     };
 
                     backgroundWorker.RunWorkerAsync();
@@ -264,32 +282,13 @@ namespace Simple_Marksmans.Utils
 
             private void SetValueThread(double minValue, double value, double maxValue, IList<Vector2> positions)
             {
-                var location = (minValue - value)/(minValue - maxValue);
-                var var1 = location*(positions[0].X - positions[1].X);
-                var position = (var1 - positions[0].X)*-1;
-                var var2 = (Positions[0].X - position)/(Positions[0].X - Positions[1].X);
-                var var3 =
-                    (int)
-                        ((maxValue - minValue)*(Math.Pow(Math.E, var2) - Math.Pow(Math.E, -var2))/
-                         (Math.Pow(Math.E, 1.0f) - Math.Pow(Math.E, -1.0f)) + minValue);
-
-
-                double increase = 0;
-                while (Math.Abs(var3 - value) > 0)
-                {
-                    increase += 0.25;
-
-                    var2 = (Positions[0].X - (position + increase))/(Positions[0].X - Positions[1].X);
-                    var3 =
-                        (int)
-                            ((maxValue - minValue)*(Math.Pow(Math.E, var2) - Math.Pow(Math.E, -var2))/
-                             (Math.Pow(Math.E, 1.0f) - Math.Pow(Math.E, -1.0f)) + minValue);
-                }
-
-                position = position + increase;
+                var pos = Misc.GetNumberInRangeFromProcent(Misc.GetProcentFromNumberRange(value, minValue, maxValue), positions[0].X, positions[1].X);
 
                 _position = new[]
-                {new Vector2((float) position - 5, positions[0].Y), new Vector2((float) position + 5, positions[0].Y)};
+                {
+                    new Vector2((float)pos-5, positions[0].Y),
+                    new Vector2((float)pos+5, positions[0].Y)
+                };
             }
 
             private void GameOnWndProc(WndEventArgs args)
@@ -315,7 +314,7 @@ namespace Simple_Marksmans.Utils
 
             public void UpdatePosition()
             {
-                SetValueThread(MinValue, Value, MaxValue, Positions);
+                SetValueThread(MinValue, _value, MaxValue, Positions);
             }
 
             public void Draw()
@@ -342,12 +341,11 @@ namespace Simple_Marksmans.Utils
                 Line.DrawLine(Color.AliceBlue, new Vector2(_position[1].X-5, Positions[0].Y), new Vector2(Positions[1].X, Positions[0].Y));
                 Line.DrawLine(Color, 12, _position);
 
-                var value = (Positions[0].X - _position[1].X+5)/(Positions[0].X - Positions[1].X);
+                //var value = (Positions[0].X - _position[1].X+5)/(Positions[0].X - Positions[1].X);
+                /* _value = (int)((MaxValue - MinValue)*(Math.Pow(Math.E, value) - Math.Pow(Math.E, -value))/
+                            (Math.Pow(Math.E, 1.0f) - Math.Pow(Math.E, -1.0f)) + MinValue);*/
 
-                Value =
-                    (int)
-                        ((MaxValue - MinValue)*(Math.Pow(Math.E, value) - Math.Pow(Math.E, -value))/
-                         (Math.Pow(Math.E, 1.0f) - Math.Pow(Math.E, -1.0f)) + MinValue);
+                _value = (int) ((MaxValue - MinValue) * Misc.GetProcentFromNumberRange(_position[0].X + 5, Positions[0].X, Positions[1].X) / 100);
             }
         }
     }
