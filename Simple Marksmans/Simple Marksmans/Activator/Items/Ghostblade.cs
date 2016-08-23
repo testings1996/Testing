@@ -39,6 +39,7 @@ namespace Simple_Marksmans.Activator.Items
             ItemId = ItemIds.Ghostblade;
             ItemType = ItemType.Offensive;
             ItemUsageWhen = ItemUsageWhen.AfterAttack;
+            Range = 800;
         }
     }
 }

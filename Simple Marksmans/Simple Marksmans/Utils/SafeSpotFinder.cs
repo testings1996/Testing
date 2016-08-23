@@ -8,7 +8,7 @@ namespace Simple_Marksmans.Utils
 {
     internal class SafeSpotFinder
     {
-        private static IEnumerable<Vector2> PointsInRange(Vector2 start, float range, float step = 25, int quality = 125)
+        public static IEnumerable<Vector2> PointsInRange(Vector2 start, float range, float step = 25, int quality = 125)
         {
             var list = new List<Vector2>();
 
@@ -45,9 +45,22 @@ namespace Simple_Marksmans.Utils
                     EntityManager.Heroes.Enemies.Where(unit => !unit.IsDead && unit.Distance(start) <= enemyScanRangge)
                         .OrderBy(unit => unit.HealthPercent)
                         .ToList(); //DangerLevel from lowest
+
                 var pointsInRange = PointsInRange(start, maxDistance, 50);
 
-                foreach (var location in pointsInRange)
+                var inRange = pointsInRange as IList<Vector2> ?? pointsInRange.ToList();
+
+                if (!sortedChampions.Any())
+                {
+                    var dic = new Dictionary<Vector2, int>();
+                    foreach (var pos in inRange.Where(pos => !dic.Keys.Contains(pos)))
+                    {
+                        dic.Add(pos, 0);
+                    }
+                    return dic;
+                }
+
+                foreach (var location in inRange)
                 {
                     if (location.Distance(start) > maxDistance)
                         continue;
@@ -61,14 +74,10 @@ namespace Simple_Marksmans.Utils
                             if (index > sortedChampions.Count && index != 0)
                             {
                                 if (!list.ContainsKey(location))
-                                    list.Add(location,
-                                        index + 1 + location.CountEnemiesInRange(enemyRange - location.Distance(start)));
-                            }
-                            if (!list.ContainsKey(location))
-                                list.Add(location,
-                                    1 + location.CountEnemiesInRange(enemyRange - location.Distance(start)));
-                        }
-                        if (!list.ContainsKey(location))
+                                    list.Add(location, index + 1 + location.CountEnemiesInRange(enemyRange - location.Distance(start)));
+                            } else if (!list.ContainsKey(location))
+                                list.Add(location, 1 + location.CountEnemiesInRange(enemyRange - location.Distance(start)));
+                        } else if (!list.ContainsKey(location))
                             list.Add(location, 0);
                     }
                 }

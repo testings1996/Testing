@@ -50,7 +50,7 @@ namespace Simple_Marksmans.Activator
         public static Menu PotionsAndElixirsMenu { get; set; }
         public static Menu ItemsMenu { get; set; }
         public static Menu CleanseMenu { get; set; }
-        public static ItemsCollection Items = new ItemsCollection();
+        public static ItemsCollection Items { get; set; } = new ItemsCollection();
 
         private static readonly Dictionary<Func<ItemIds, bool>, Action> ObjectInitializer = new Dictionary
             <Func<ItemIds, bool>, Action>
@@ -186,7 +186,7 @@ namespace Simple_Marksmans.Activator
                     var myMinHp = MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName + ".MyMinHP", true];
                     var targetsMinHp = MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName + ".TargetsMinHP", true];
                     var ifEnemiesNear = MenuManager.MenuValues["Activator.ItemsMenu." + Items[enumValues].ItemName + ".IfEnemiesNear", true];
-                    var target = TargetSelector.GetTarget(800, DamageType.Physical);
+                    var target = TargetSelector.GetTarget(Items[enumValues].Range, DamageType.Physical);
 
                     if (target == null || ((!MenuManager.MenuValues["Activator.ItemsMenu.OnlyInCombo"] || !Orbwalker.ActiveModesFlags.HasFlag(Orbwalker.ActiveModes.Combo)) && MenuManager.MenuValues["Activator.ItemsMenu.OnlyInCombo"]))
                         return;

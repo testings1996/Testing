@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using EloBuddy;
+using EloBuddy.SDK;
 using SharpDX;
 using Simple_Marksmans.Interfaces;
 
@@ -96,12 +97,12 @@ namespace Simple_Marksmans.Utils
             if (item == null || item.ItemId == 0)
                 return;
             
-            var myItem = new EloBuddy.SDK.Item((int)item.ItemId, item.Range);
+            var myItem = new Item((int)item.ItemId, item.Range);
 
             if (item.ItemId == ItemIds.HealthPotion)
             {
                 if(!myItem.IsOwned())
-                    myItem = new EloBuddy.SDK.Item((int)ItemIds.Biscuit, item.Range);
+                    myItem = new Item((int)ItemIds.Biscuit, item.Range);
             }
 
             if (!myItem.IsOwned() || !myItem.IsReady())
@@ -123,12 +124,12 @@ namespace Simple_Marksmans.Utils
             if (item == null || item.ItemId == 0)
                 return;
 
-            var myItem = new EloBuddy.SDK.Item((int) item.ItemId, item.Range);
+            var myItem = new Item((int) item.ItemId, item.Range);
 
             if (item.ItemId == ItemIds.HealthPotion)
             {
                 if (!myItem.IsOwned())
-                    myItem = new EloBuddy.SDK.Item((int)ItemIds.Biscuit, item.Range);
+                    myItem = new Item((int)ItemIds.Biscuit, item.Range);
             }
 
             if (!myItem.IsOwned() || !myItem.IsReady())
@@ -145,9 +146,98 @@ namespace Simple_Marksmans.Utils
                 Activator.Activator.UnLoadItem((int)item.ItemId);
         }
 
-        public static EloBuddy.SDK.Item ToItem(this IItem item)
+        public static Item ToItem(this IItem item)
         {
-            return new EloBuddy.SDK.Item((int) item.ItemId, item.Range);
+            return new Item((int) item.ItemId, item.Range);
+        }
+
+        public static bool IsVectorUnderEnemyTower(this Vector3 vector)
+        {
+            return EntityManager.Turrets.Enemies.Any(x => x.IsValidTarget(900, true, vector));
+        }
+
+        public static Vector2[] SortVectorsByDistance(Vector2[] array, Vector2 point)
+        {
+            if (array.Length == 1)
+                return array;
+
+            for (var i = 0; i < array.Length; i++)
+            {
+                for (var j = i + 1; j < array.Length; j++)
+                {
+                    if (!(array[i].Distance(point) > array[j].Distance(point)))
+                        continue;
+
+                    var temporary = array[i];
+
+                    array[i] = array[j];
+                    array[j] = temporary;
+                }
+            }
+            return array;
+        }
+
+        public static List<Vector2> SortVectorsByDistance(List<Vector2> list, Vector2 point)
+        {
+            if (list.Count == 1)
+                return list;
+
+            for (var i = 0; i < list.Count; i++)
+            {
+                for (var j = i + 1; j < list.Count; j++)
+                {
+                    if (!(list[i].Distance(point) > list[j].Distance(point)))
+                        continue;
+
+                    var temporary = list[i];
+
+                    list[i] = list[j];
+                    list[j] = temporary;
+                }
+            }
+            return list;
+        }
+
+        public static Vector2[] SortVectorsByDistanceDescending(Vector2[] array, Vector2 point)
+        {
+            if (array.Length == 1)
+                return array;
+
+            for (var i = 0; i < array.Length; i++)
+            {
+                for (var j = i + 1; j < array.Length; j++)
+                {
+                    if (!(array[i].Distance(point) < array[j].Distance(point)))
+                        continue;
+
+                    var temporary = array[i];
+
+                    array[i] = array[j];
+                    array[j] = temporary;
+                }
+            }
+            return array;
+        }
+
+        public static List<Vector2> SortVectorsByDistanceDescending(List<Vector2> list, Vector2 point)
+        {
+            if (list.Count == 1)
+                return list;
+
+            for (var i = 0; i < list.Count; i++)
+            {
+                for (var j = i + 1; j < list.Count; j++)
+                {
+                    if (!(list[i].Distance(point) < list[j].Distance(point)))
+                        continue;
+
+                    var temporary = list[i];
+
+                    list[i] = list[j];
+                    list[j] = temporary;
+                }
+            }
+            return list;
         }
 
         public static System.Drawing.Color ColorFromHsv(double hue, double saturation, double brightness)

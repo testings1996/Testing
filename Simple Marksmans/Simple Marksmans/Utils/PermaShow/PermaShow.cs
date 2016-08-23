@@ -93,7 +93,7 @@ namespace Simple_Marksmans.Utils.PermaShow
         
         private void CreateMenu()
         {
-            Menu.Add("Enable", new CheckBox("Enable PermaShow"));
+            Menu.Add("Enable", new CheckBox("Enable PermaShow", false));
             Menu.Add("Spacing", new Slider("Spacing", 25, 10, 50)).OnValueChange += delegate { UpdatePositions(); };
             Menu.Add("Opacity", new Slider("Opacity", 255, 0, 255)).OnValueChange += delegate { UpdatePositions(); };
 
@@ -417,9 +417,11 @@ namespace Simple_Marksmans.Utils.PermaShow
                             Positions = new[] {new Vector2(200, 155), new Vector2(500, 155)},
                             Width = 2
                         });
-                        var xd = new BoolItemData(data.ItemName, data.Value, data.TextHeight);
-                        xd.OnValueChangeEvent += Xd_OnValueChangeEvent;
-                        return (T)Convert.ChangeType(xd, typeof(BoolItemData));
+
+                        var t = new BoolItemData(data.ItemName, data.Value, data.TextHeight);
+                        t.OnValueChangeEvent += BoolItemData_OnValueChangeEvent;
+
+                        return (T)Convert.ChangeType(t, typeof(BoolItemData));
                     }
                 }
                 if (value.GetType() == typeof (MenuItem))
@@ -642,7 +644,11 @@ namespace Simple_Marksmans.Utils.PermaShow
                                 },
                             Width = 2
                         });
-                        return (T)Convert.ChangeType(this, typeof(BoolItemData));
+
+                        var t = new BoolItemData(data.ItemName, data.Value, data.TextHeight);
+                        t.OnValueChangeEvent += BoolItemData_OnValueChangeEvent;
+
+                        return (T)Convert.ChangeType(t, typeof(BoolItemData));
                     }
                 }
                 else if (value.GetType() == typeof (StringItemData))
@@ -666,7 +672,7 @@ namespace Simple_Marksmans.Utils.PermaShow
                             ItemType = ItemTypes.String,
                             ItemName = itemName,
                             ItemValue = itemValue,
-                            Type = typeof (BoolItemData)
+                            Type = typeof (StringItemData)
                         });
 
                         _separators.Add(new SeparatorData
@@ -684,7 +690,10 @@ namespace Simple_Marksmans.Utils.PermaShow
                                 },
                             Width = 2
                         });
-                        return (T)Convert.ChangeType(this, typeof(BoolItemData));
+
+                        var t = new StringItemData(data.ItemName, data.Value, data.TextHeight);
+                        t.OnValueChangeEvent += StringItemData_OnValueChangeEvent;
+                        return (T)Convert.ChangeType(t, typeof(StringItemData));
                     }
                 }
             }
@@ -692,7 +701,19 @@ namespace Simple_Marksmans.Utils.PermaShow
             return  (T)(object)null;
         }
 
-        private void Xd_OnValueChangeEvent(object sender, ChangeValueEventArgs args)
+        private void StringItemData_OnValueChangeEvent(object sender, StringChangeValueEventArgs args)
+        {
+            var item = _permaShowItems.FirstOrDefault(e => e.ItemName.Message == args.ItemName);
+
+            if (item == null)
+                return;
+
+            var index = _permaShowItems.FindIndex(data => item.ItemName == data.ItemName);
+
+            _permaShowItems[index].ItemValue.Message = args.Value;
+        }
+
+        private void BoolItemData_OnValueChangeEvent(object sender, BoolChangeValueEventArgs args)
         {
             var item = _permaShowItems.FirstOrDefault(e => e.ItemName.Message == args.ItemName);
 
@@ -780,7 +801,7 @@ namespace Simple_Marksmans.Utils.PermaShow
             {
                 if (_value != value)
                 {
-                    OnValueChangeEvent?.Invoke(this, new ChangeValueEventArgs {ItemName = ItemName, Value = value});
+                    OnValueChangeEvent?.Invoke(this, new BoolChangeValueEventArgs { ItemName = ItemName, Value = value});
                 }
                 _value = value;
             }
@@ -788,7 +809,7 @@ namespace Simple_Marksmans.Utils.PermaShow
 
         public uint TextHeight { get; set; }
 
-        public delegate void OnValueChange(object sender, ChangeValueEventArgs args);
+        public delegate void OnValueChange(object sender, BoolChangeValueEventArgs args);
         public event OnValueChange OnValueChangeEvent;
 
         public BoolItemData(string itemName, bool value, uint textHeight)
@@ -799,17 +820,38 @@ namespace Simple_Marksmans.Utils.PermaShow
         }
     }
 
-    internal class ChangeValueEventArgs : EventArgs
+
+    internal class BoolChangeValueEventArgs : EventArgs
     {
         public string ItemName { get; set; }
         public bool Value { get; set; }
     }
 
-    internal class StringItemData: IPermaShowItem
+    internal class StringChangeValueEventArgs : EventArgs
     {
         public string ItemName { get; set; }
         public string Value { get; set; }
+    }
+
+    internal class StringItemData: IPermaShowItem
+    {
+        public string ItemName { get; set; }
+        private string _value;
+
+        public string Value { get { return _value; }
+            set
+            {
+                if (_value != value)
+                {
+                    OnValueChangeEvent?.Invoke(this, new StringChangeValueEventArgs { ItemName = ItemName, Value = value });
+                }
+                _value = value;
+            }
+        }
         public uint TextHeight { get; set; }
+
+        public delegate void OnValueChange(object sender, StringChangeValueEventArgs args);
+        public event OnValueChange OnValueChangeEvent;
 
         public StringItemData(string itemName, string value, uint textHeight)
         {

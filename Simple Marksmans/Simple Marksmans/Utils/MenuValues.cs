@@ -32,7 +32,6 @@ using EloBuddy.SDK.Utils;
 
 namespace Simple_Marksmans.Utils
 {
-
     public class MenuValues
     {
         public bool this[string key]

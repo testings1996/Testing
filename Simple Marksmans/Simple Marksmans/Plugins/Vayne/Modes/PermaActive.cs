@@ -26,12 +26,9 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
 
 namespace Simple_Marksmans.Plugins.Vayne.Modes
 {
@@ -39,6 +36,27 @@ namespace Simple_Marksmans.Plugins.Vayne.Modes
     {
         public static void Execute()
         {
+            if (E.IsReady() && Settings.Combo.UseE && Settings.Misc.EMode == 0)
+            {
+                var target = TargetSelector.GetTarget(Player.Instance.GetAutoAttackRange() + 300, DamageType.Physical);
+
+                if (target != null)
+                {
+                    var enemies = Player.Instance.CountEnemiesInRange(Player.Instance.GetAutoAttackRange() + 300);
+
+                    if (WillEStun(target))
+                    {
+                        E.Cast(target);
+                    }
+                    else if (enemies > 1)
+                    {
+                        foreach (var enemy in EntityManager.Heroes.Enemies.Where(x => x.IsValidTarget(E.Range) && WillEStun(x)).OrderByDescending(TargetSelector.GetPriority))
+                        {
+                            E.Cast(enemy);
+                        }
+                    }
+                }
+            }
         }
     }
 }

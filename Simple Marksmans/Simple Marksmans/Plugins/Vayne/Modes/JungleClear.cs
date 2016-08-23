@@ -26,12 +26,9 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
 
 namespace Simple_Marksmans.Plugins.Vayne.Modes
 {
@@ -39,7 +36,19 @@ namespace Simple_Marksmans.Plugins.Vayne.Modes
     {
         public static void Execute()
         {
-        }
+            var jungleMinions = EntityManager.MinionsAndMonsters.GetJungleMonsters(Player.Instance.Position, E.Range).ToList();
 
+            if (!jungleMinions.Any())
+                return;
+
+            if (IsPostAttack && Q.IsReady() && Settings.LaneClear.UseQToJungleClear)
+            {
+                if (Player.Instance.Position.Extend(Game.CursorPos, 299)
+                    .IsInRange(Orbwalker.LastTarget, Player.Instance.GetAutoAttackRange()))
+                {
+                    Q.Cast(Player.Instance.Position.Extend(Game.CursorPos, 285).To3D());
+                }
+            }
+        }
     }
 }

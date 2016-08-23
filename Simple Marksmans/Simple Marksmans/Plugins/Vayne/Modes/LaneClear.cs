@@ -26,10 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
+
+using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
-using Simple_Marksmans.Interfaces;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.Vayne.Modes
 {
@@ -37,14 +38,45 @@ namespace Simple_Marksmans.Plugins.Vayne.Modes
     {
         public static void Execute()
         {
+            var laneMinions = EntityManager.MinionsAndMonsters.GetLaneMinions(EntityManager.UnitTeam.Enemy, Player.Instance.Position,
+    Player.Instance.GetAutoAttackRange() + 250).ToList();
 
-        }
+            if (!laneMinions.Any() &&
+                !(!Settings.LaneClear.EnableIfNoEnemies ||
+                  Player.Instance.CountEnemiesInRange(Settings.LaneClear.ScanRange) >
+                  Settings.LaneClear.AllowedEnemies))
+                return;
 
-        public static void AfterAttack(AttackableUnit target, EventArgs args)
-        {
-            Q.Cast(Player.Instance.Position.Extend(Game.CursorPos, 200).To3D());
+            if (Q.IsReady() && IsPostAttack && Settings.LaneClear.UseQToLaneClear &&
+                Player.Instance.ManaPercent >= Settings.LaneClear.MinMana)
+            {
+                var minion =
+                    EntityManager.MinionsAndMonsters.EnemyMinions.Where(
+                        x =>
+                            x.IsValidTarget(Player.Instance.GetAutoAttackRange()) && x.Health > Player.Instance.GetAutoAttackDamage(x, true) &&
+                            x.Health <
+                            Player.Instance.GetAutoAttackDamage(x, true) +
+                            Player.Instance.TotalAttackDamage*Damage.QBonusDamage[Q.Level] && Prediction.Health.GetPrediction(x, 500) > Player.Instance.GetAutoAttackDamage(x, true)).OrderBy(x=>x.Distance(Player.Instance));
 
+                if (!minion.Any())
+                    return;
 
+                if (Player.Instance.Position.Extend(Game.CursorPos, 299)
+                    .IsInRange(minion.First(), Player.Instance.GetAutoAttackRange()))
+                {
+                    Q.Cast(Player.Instance.Position.Extend(Game.CursorPos, 285).To3D());
+                    return;
+                }
+
+                var pos = SafeSpotFinder.PointsInRange(Player.Instance.Position.To2D(), 300, 100).Where(x=> EntityManager.Heroes.Enemies.Any(e=>e.IsInRange(x, e.GetAutoAttackRange())) == false).ToList();
+
+                if (!pos.Any())
+                    return;
+
+                pos = Misc.SortVectorsByDistance(pos, minion.First().Position.To2D());
+
+                Q.Cast(Player.Instance.Position.Extend(pos[0], 285).To3D());
+            }
         }
     }
 }

@@ -208,6 +208,14 @@ namespace Simple_Marksmans.Plugins.Twitch
                 Text.TextValue = timeLeft.ToString("F1");
                 Text.Draw();
 
+                var percentDamage = Math.Min(100, Damage.GetEDamage(source) / source.TotalHealthWithShields() * 100);
+
+                Text.X = (int)(hpPosition.X - 50);
+                Text.Y = (int)source.HPBarPosition.Y;
+                Text.Color = new Misc.HsvColor(Misc.GetNumberInRangeFromProcent(percentDamage, 3, 110), 1, 1).ColorFromHsv();
+                Text.TextValue = percentDamage.ToString("F1");
+                Text.Draw();
+
                 Drawing.DrawLine(hpPosition.X + endPos, hpPosition.Y, hpPosition.X, hpPosition.Y, 1, color);
             }
         }
