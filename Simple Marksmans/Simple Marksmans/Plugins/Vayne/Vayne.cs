@@ -260,7 +260,10 @@ namespace Simple_Marksmans.Plugins.Vayne
                 Circle.Draw(Color.White,
                     LaneClearMenu["Plugins.Vayne.LaneClearMenu.ScanRange"].Cast<Slider>().CurrentValue, Player.Instance);
 
-            foreach (var source in EntityManager.Heroes.Enemies.Where(x => x.IsVisible && x.Position.IsOnScreen() && HasSilverDebuff(x)))
+            if (!Settings.Drawings.DrawInfo)
+                return;
+
+            foreach (var source in EntityManager.Heroes.Enemies.Where(x => x.IsVisible && x.IsHPBarRendered && x.Position.IsOnScreen() && HasSilverDebuff(x)))
             {
                 var hpPosition = source.HPBarPosition;
                 hpPosition.Y = hpPosition.Y + 30; // tracker friendly.
@@ -780,7 +783,7 @@ namespace Simple_Marksmans.Plugins.Vayne
 
             internal static class Drawings
             {
-                public static bool DrawSpellRangesWhenReady
+                public static bool DrawInfo
                 {
                     get
                     {

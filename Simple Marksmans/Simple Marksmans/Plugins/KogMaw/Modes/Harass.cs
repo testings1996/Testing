@@ -26,12 +26,11 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
+
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EloBuddy;
+using EloBuddy.SDK;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.KogMaw.Modes
 {
@@ -39,7 +38,55 @@ namespace Simple_Marksmans.Plugins.KogMaw.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Harass mode !");
+            if (Q.IsReady() && Settings.Harass.UseQ && Player.Instance.ManaPercent >= Settings.Harass.MinManaToUseQ)
+            {
+                var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
+
+                if (target != null && !target.HasSpellShield() && !target.HasUndyingBuffA())
+                {
+                    var qPrediction = Q.GetPrediction(target);
+
+                    if (qPrediction.HitChancePercent > 80)
+                        Q.Cast(qPrediction.CastPosition);
+                }
+            }
+
+            if (W.IsReady() && Settings.Harass.UseW && Player.Instance.ManaPercent >= Settings.Harass.MinManaToUseW && EntityManager.Heroes.Enemies.Any(x => x.IsValidTarget(W.Range)))
+            {
+                W.Cast();
+            }
+
+            if (R.IsReady() && Settings.Harass.UseR)
+            {
+                foreach (
+                    var enemy in
+                        EntityManager.Heroes.Enemies.Where(
+                            x => x.IsValidTarget(R.Range) && Settings.Harass.IsHarassEnabledFor(x) && !x.HasSpellShield() && !x.HasUndyingBuffA())
+                            .OrderBy(TargetSelector.GetPriority)
+                            .ThenByDescending(x => R.GetPrediction(x).HitChancePercent))
+                {
+                    if(!R.IsReady())
+                        break;
+
+                    if (HasKogMawRBuff && GetKogMawRBuff.Count <= Settings.Harass.RAllowedStacks)
+                    {
+                            var rPrediction = R.GetPrediction(enemy);
+
+                        if (rPrediction.HitChancePercent > 80)
+                        {
+                            R.Cast(rPrediction.CastPosition);
+                        }
+                    } else if (!HasKogMawRBuff)
+                    {
+                        var rPrediction = R.GetPrediction(enemy);
+
+                        if (rPrediction.HitChancePercent > 80)
+                        {
+                            R.Cast(rPrediction.CastPosition);
+                        }
+                    }
+                }
+            }
         }
     }
 }

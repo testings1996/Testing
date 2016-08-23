@@ -192,7 +192,7 @@ namespace Simple_Marksmans.Plugins.Twitch
             if (!Settings.Drawings.DrawDamageIndicator)
                 return;
             
-            foreach (var source in EntityManager.Heroes.Enemies.Where(x=> x.IsVisible && x.Position.IsOnScreen() && HasDeadlyVenomBuff(x)))
+            foreach (var source in EntityManager.Heroes.Enemies.Where(x=> x.IsVisible && x.IsHPBarRendered && x.Position.IsOnScreen() && HasDeadlyVenomBuff(x)))
             {
                 var hpPosition = source.HPBarPosition;
                 hpPosition.Y = hpPosition.Y + 30; // tracker friendly.

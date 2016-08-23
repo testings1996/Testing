@@ -26,12 +26,10 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EloBuddy;
+using EloBuddy.SDK;
+using EloBuddy.SDK.Enumerations;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.KogMaw.Modes
 {
@@ -39,6 +37,26 @@ namespace Simple_Marksmans.Plugins.KogMaw.Modes
     {
         public static void Execute()
         {
+            if (R.IsReady())
+            {
+                var enemy = EntityManager.Heroes.Enemies.Where(
+                    x => x.IsValidTarget(R.Range) && (x.TotalHealthWithShields() - IncomingDamage.GetIncomingDamage(x) < Damage.GetEDamage(x)))
+                    .OrderBy(TargetSelector.GetPriority).ThenByDescending(x=>R.GetPrediction(x).HitChancePercent).FirstOrDefault();
+
+                if (enemy != null)
+                {
+                    var rPrediction = R.GetPrediction(enemy);
+
+                    if (HasKogMawRBuff && (GetKogMawRBuff.Count <= Settings.Combo.RAllowedStacks + 1) && rPrediction.HitChance >= HitChance.High)
+                    {
+                        R.Cast(rPrediction.CastPosition);
+                    }
+                    else if(!HasKogMawRBuff && rPrediction.HitChance >= HitChance.High)
+                    {
+                        R.Cast(rPrediction.CastPosition);
+                    }
+                }
+            }
         }
     }
 }

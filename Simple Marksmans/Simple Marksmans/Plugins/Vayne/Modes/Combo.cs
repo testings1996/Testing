@@ -79,11 +79,11 @@ namespace Simple_Marksmans.Plugins.Vayne.Modes
                                     target.IsMelee ? target.GetAutoAttackRange() * 2 : target.GetAutoAttackRange()).Where(x => !x.Key.To3D().IsVectorUnderEnemyTower() && x.Key.IsInRange(Prediction.Position.PredictUnitPosition(closest, 850), Player.Instance.GetAutoAttackRange() - 50)).Select(source => source.Key).ToList();
 
                             if (list.Any())
-                            {/*
+                            {
                                 var paths =
                                     EntityManager.Heroes.Enemies.Where(x => x.IsValidTarget(1300))
                                         .Select(x => x.Path)
-                                        .Count(result => result != null && result.Last().Distance(Player.Instance) < 300);*/
+                                        .Count(result => result != null && result.Last().Distance(Player.Instance) < 300);
 
                                 var asc = Misc.SortVectorsByDistance(list, target.Position.To2D())[0].To3D();
                                 if (Player.Instance.CountEnemiesInRange(Player.Instance.GetAutoAttackRange()) == 0 &&
@@ -95,10 +95,10 @@ namespace Simple_Marksmans.Plugins.Vayne.Modes
                                     position = asc;
 
                                     Console.WriteLine("[DEBUG] Paths low sorting Ascending");
-                                } /*else if (Player.Instance.CountEnemiesInRange(Player.Instance.GetAutoAttackRange()) <= 1 && (paths == 0 || paths == 1) && (closest.Health < Player.Instance.GetAutoAttackDamage(closest, true) * 2))
+                                } else if (Player.Instance.CountEnemiesInRange(1000) <= 2 && (paths == 0 || paths == 1) && ((closest.Health < Player.Instance.GetAutoAttackDamage(closest, true) * 2) || (Orbwalker.LastTarget is AIHeroClient && Orbwalker.LastTarget.Health < Player.Instance.GetAutoAttackDamage(closest, true) * 2)))
                                 {
                                     position = asc;
-                                }*/
+                                }
                                 else
                                 {
                                     position =

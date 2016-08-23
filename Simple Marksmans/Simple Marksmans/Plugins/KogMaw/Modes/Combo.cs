@@ -26,7 +26,12 @@
 //  </summary>
 //  --------------------------------------------------------------------------------------------------------------------
 #endregion
+
+using System.Linq;
 using EloBuddy;
+using EloBuddy.SDK;
+using EloBuddy.SDK.Enumerations;
+using Simple_Marksmans.Utils;
 
 namespace Simple_Marksmans.Plugins.KogMaw.Modes
 {
@@ -34,12 +39,61 @@ namespace Simple_Marksmans.Plugins.KogMaw.Modes
     {
         public static void Execute()
         {
-            Chat.Print("Kog'Maw : Combo mode !");
-        }
+            if (Q.IsReady() && Settings.Combo.UseQ && Player.Instance.Mana - 40 > 80)
+            {
+                var target = TargetSelector.GetTarget(Q.Range, DamageType.Magical);
 
-        private static void KogMaw_OnPostAttackEvent(AttackableUnit target, System.EventArgs args)
-        {
-            Chat.Print("Kog'Maw : OnPostAttack !");
+                if (target != null && !target.HasSpellShield() && !target.HasUndyingBuffA())
+                {
+                    var qPrediction = Q.GetPrediction(target);
+
+                    if (qPrediction.HitChancePercent > 50)
+                        Q.Cast(qPrediction.CastPosition);
+                }
+            }
+
+            if (W.IsReady() && Settings.Combo.UseW && EntityManager.Heroes.Enemies.Any(x => x.IsValidTarget(W.Range)))
+            {
+                W.Cast();
+            }
+
+            if (E.IsReady() && Settings.Combo.UseE && Player.Instance.Mana - EMana[E.Level] > 80)
+            {
+                var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
+
+                if (target != null && !target.HasSpellShield() && !target.HasUndyingBuffA())
+                {
+                    var ePrediction = E.GetPrediction(target);
+
+                    if (ePrediction.HitChancePercent > 80)
+                        E.Cast(ePrediction.CastPosition);
+                }
+            }
+
+            if (R.IsReady() && Settings.Combo.UseR && !Settings.Combo.UseROnlyToKs)
+            {
+                var target = TargetSelector.GetTarget(R.Range, DamageType.Magical);
+
+                if (HasKogMawRBuff && GetKogMawRBuff.Count <= Settings.Combo.RAllowedStacks && (Player.Instance.Mana - (GetKogMawRBuff.Count + 1)*50 > 80))
+                {
+                    if (target != null && target.HealthPercent < Settings.Combo.RMaxHealth && !target.HasSpellShield() && !target.HasUndyingBuffA())
+                    {
+                        var rPrediction = R.GetPrediction(target);
+
+                        if (rPrediction.HitChance >= HitChance.High)
+                            R.Cast(rPrediction.CastPosition);
+                    }
+                } else if (!HasKogMawRBuff)
+                {
+                    if (target != null && target.HealthPercent < Settings.Combo.RMaxHealth && !target.HasSpellShield() && !target.HasUndyingBuffA())
+                    {
+                        var rPrediction = R.GetPrediction(target);
+
+                        if (rPrediction.HitChance >= HitChance.High)
+                            R.Cast(rPrediction.CastPosition);
+                    }
+                }
+            }
         }
     }
 }
